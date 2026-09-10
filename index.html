@@ -482,6 +482,7 @@ html[data-theme="light"] .tgl i{transform:translateX(26px)}
 .lg-plan{width:20px;height:9px;border-radius:3px;border:1.5px dashed var(--violet);background:rgba(167,139,250,.2)}
 .lg-real{width:20px;height:9px;border-radius:3px;background:linear-gradient(90deg,var(--blue-d),var(--blue))}
 .lg-today{width:2px;height:12px;border-radius:2px;background:var(--pink-500);box-shadow:0 0 8px var(--pink-400)}
+.lg-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
 
 .gantt-scroll{overflow-x:auto;overflow-y:hidden;padding-bottom:6px;position:relative}
 .gantt{min-width:max-content;position:relative}
@@ -766,6 +767,71 @@ html[data-theme="dark"] .shelf-board{background:linear-gradient(180deg,#4A2038,#
   min-height:220px;color:var(--tx-3);font-size:12.5px;width:100%;
 }
 
+/* ==========================================================================
+   408 刷题库
+   ========================================================================== */
+.qz-card{
+  position:relative;padding:22px 22px 20px;border-radius:var(--r-lg);cursor:pointer;
+  border:1px solid var(--bd);background:var(--glass);
+  backdrop-filter:blur(20px) saturate(150%);
+  -webkit-backdrop-filter:blur(20px) saturate(150%);
+  transition:transform .5s var(--ease-out), border-color .45s, box-shadow .5s, background .45s;
+  overflow:hidden;
+}
+.qz-card::before{
+  content:'';position:absolute;inset:0 0 auto 0;height:3px;
+  background:linear-gradient(90deg,var(--qc1),var(--qc2));
+}
+.qz-card:hover{transform:translateY(-4px);border-color:var(--bd-2);box-shadow:var(--shadow)}
+.qz-top{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.qz-icon{
+  width:42px;height:42px;border-radius:13px;display:grid;place-items:center;flex:0 0 42px;
+  background:linear-gradient(135deg,var(--qc1),var(--qc2));
+  box-shadow:0 12px 26px -13px var(--qc1);
+}
+.qz-icon svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.qz-name{font-size:16px;font-weight:750;letter-spacing:-.01em;line-height:1.3}
+.qz-en{font-size:10.5px;color:var(--tx-3);letter-spacing:.1em;text-transform:uppercase;margin-top:4px}
+.qz-nums{display:flex;align-items:baseline;gap:16px;margin-bottom:14px}
+.qz-num b{font-size:26px;font-weight:830;letter-spacing:-.035em;font-variant-numeric:tabular-nums}
+.qz-num small{font-size:11.5px;color:var(--tx-3);margin-left:3px;font-weight:600}
+.qz-foot{display:flex;align-items:center;justify-content:space-between;margin-top:13px;font-size:11.5px;color:var(--tx-3)}
+.qz-chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:15px}
+.qz-chip{
+  font-size:11px;padding:3.5px 10px;border-radius:99px;
+  border:1px solid var(--bd);background:var(--glass-2);color:var(--tx-2);
+}
+.qz-go{
+  display:inline-flex;align-items:center;gap:6px;margin-top:16px;
+  font-size:12.5px;font-weight:650;color:var(--qc1);
+}
+.qz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(16px,1fr));gap:5px;margin-top:16px}
+.qz-cell{height:16px;border-radius:4.5px;background:var(--track);transition:transform .3s var(--ease-out)}
+.qz-cell:hover{transform:scale(1.4);z-index:2}
+.qz-cell.l1{background:rgba(244,114,182,.32)}
+.qz-cell.l2{background:rgba(236,72,153,.56)}
+.qz-cell.l3{background:rgba(219,39,119,.82)}
+.qz-cell.l4{background:linear-gradient(135deg,var(--pink-500),var(--violet-d));box-shadow:0 0 10px rgba(236,72,153,.5)}
+
+/* 刷题页（iframe 承载原刷题本，功能完全保留） */
+.qz-bar{
+  position:sticky;top:var(--nav-h,57px);z-index:20;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:12px 0;margin-bottom:12px;
+  background:rgba(var(--bg-rgb),.86);
+  backdrop-filter:blur(18px) saturate(170%);
+  -webkit-backdrop-filter:blur(18px) saturate(170%);
+  border-bottom:1px solid var(--bd);
+}
+.qz-frame{
+  display:block;width:100%;
+  height:calc(100vh - var(--nav-h,57px) - 132px);
+  min-height:600px;
+  border:1px solid var(--bd);border-radius:var(--r-lg);
+  background:#fff;box-shadow:var(--shadow);
+  animation:riseIn .5s var(--ease-out) both;
+}
+
 /* 笔记阅读页（独立页面，支持 Markdown 与 PDF） */
 .reader{max-width:960px;margin:0 auto;padding:0 22px}
 .reader-bar{
@@ -927,6 +993,8 @@ html[data-theme="dark"] .shelf-board{background:linear-gradient(180deg,#4A2038,#
   .reader{padding:0 16px}
   .reader-title{font-size:15.5px}
   .memo-grid{grid-template-columns:repeat(2,1fr);gap:14px}
+  .qz-bar{position:static}
+  .qz-frame{height:calc(100vh - 190px);min-height:480px}
   .shelf-lane{min-height:322px;padding-left:6px;padding-right:6px}
 }
 @media (prefers-reduced-motion:reduce){
@@ -1678,6 +1746,120 @@ html[data-theme="dark"] .shelf-board{background:linear-gradient(180deg,#4A2038,#
           </div>
         </section>
 
+        <!-- ============================================================
+             408 刷题库 · 总览
+             ============================================================ -->
+        <section v-else-if="page==='quiz'" key="quiz" class="page">
+          <div class="sec-head">
+            <div>
+              <div class="sec-title">408 刷题库</div>
+              <div class="sec-desc">操作系统 · 计算机组成原理 · 计算机网络 —— 共 {{ quizSum.total }} 道选择题</div>
+            </div>
+            <div class="legend">
+              <b><i class="lg-dot" style="background:var(--pink-500)"></i>已刷</b>
+              <b><i class="lg-dot" style="background:var(--violet)"></i>错题本</b>
+            </div>
+          </div>
+
+          <div class="g g-4" style="margin-bottom:16px">
+            <div class="card card-pad hoverable">
+              <div class="lbl">已刷题目</div>
+              <div class="val num">{{ quizSum.done }}<small>/ {{ quizSum.total }}</small></div>
+              <div class="bar" style="margin-top:13px"><i :style="{width:quizSum.pct+'%'}"></i></div>
+              <div class="foot">已覆盖 {{ quizSum.pct }}% · 还剩 {{ quizSum.left }} 题</div>
+            </div>
+            <div class="card card-pad hoverable">
+              <div class="lbl">总正确率</div>
+              <div class="val num">{{ quizSum.acc }}<small>%</small></div>
+              <div class="foot">累计作答 {{ quizSum.attempts }} 次</div>
+            </div>
+            <div class="card card-pad hoverable">
+              <div class="lbl">错题本</div>
+              <div class="val num">{{ quizSum.book }}<small>题</small></div>
+              <div class="foot">需要重点回炉</div>
+            </div>
+            <div class="card card-pad hoverable">
+              <div class="lbl">题库总量</div>
+              <div class="val num">{{ quizSum.total }}<small>题</small></div>
+              <div class="foot">3 科 · {{ quizChapters }} 个章节</div>
+            </div>
+          </div>
+
+          <div class="g g-3" style="margin-bottom:16px">
+            <div class="qz-card" v-for="s in quizRows" :key="s.key"
+                 :style="{'--qc1':s.color,'--qc2':s.color2}"
+                 @click="openQuiz(s)">
+              <div class="qz-top">
+                <div class="qz-icon">
+                  <svg viewBox="0 0 24 24"><rect x="4" y="4.5" width="16" height="15" rx="2.4"/><path d="M9 9.5h6M9 13h6M9 16.5h3.5"/></svg>
+                </div>
+                <div>
+                  <div class="qz-name">{{ s.name }}</div>
+                  <div class="qz-en">{{ s.en }}</div>
+                </div>
+              </div>
+              <div class="qz-nums">
+                <div class="qz-num"><b class="num">{{ s.done }}</b><small>/ {{ s.total }} 题</small></div>
+                <div class="qz-num"><b class="num">{{ s.acc }}</b><small>% 正确</small></div>
+              </div>
+              <div class="bar"><i :style="{width:s.pct+'%',background:'linear-gradient(90deg,'+s.color+','+s.color2+')'}"></i></div>
+              <div class="qz-foot">
+                <span>已刷 {{ s.pct }}%</span>
+                <span>错题本 {{ s.book }}</span>
+              </div>
+              <div class="qz-chips">
+                <span class="qz-chip">{{ s.attempts ? s.attempts + ' 次作答' : '还没开始' }}</span>
+                <span class="qz-chip">{{ s.chapters }} 章节</span>
+                <span class="qz-chip">{{ s.total }} 题</span>
+              </div>
+              <div class="qz-go">
+                进入刷题
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M12.5 5.8l6.2 6.2-6.2 6.2"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="card card-pad">
+            <div class="sec-head" style="margin-bottom:12px">
+              <div class="card-title"><span class="dot"></span>使用说明</div>
+            </div>
+            <div class="card-sub" style="line-height:2.05">
+              · 点击任意科目卡片即可<b style="color:var(--tx-2)">在站内开始刷题</b>，原刷题本的全部功能（全部题库 / 错题本 / 章节顺序 / 随机 / 组卷测试 / 导出导入 / Gist 云同步）完整保留。<br>
+              · 刷题进度保存在<b style="color:var(--tx-2)">本机浏览器</b>（localStorage），与刷题本实时互通；换设备或清理缓存会重置。<br>
+              · 需要跨设备迁移时，用刷题本的「导出 JSON / 导入」，或配置它自带的 GitHub Gist 云同步。
+            </div>
+          </div>
+        </section>
+
+        <!-- 408 刷题 · 答题中 -->
+        <section v-else-if="page==='quizPlay' && quizActive" key="quizPlay" class="page" style="padding-top:0">
+          <div class="qz-bar">
+            <button class="btn btn-ghost btn-sm" @click="closeQuiz">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5.8L8.8 12l6.2 6.2"/></svg>
+              返回题库
+            </button>
+            <div style="flex:1;min-width:150px">
+              <div class="reader-title">{{ quizActive.name }} · 刷题本</div>
+              <div class="reader-meta">
+                <span class="tag" :style="{borderColor:quizActive.color+'66',color:quizActive.color}">{{ quizActive.name }}</span>
+                <span class="tag">{{ quizActive.total }} 题</span>
+                <span class="tag">{{ quizActive.chapters }} 章节</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-ghost btn-sm" @click="reloadQuiz">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5A8 8 0 1 0 18.4 17"/><path d="M20 5.5v6h-6"/></svg>
+                刷新
+              </button>
+              <button class="btn btn-ghost btn-sm" @click="openQuizBlank">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-8.5 8.5"/><path d="M18 14.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h4.5"/></svg>
+                新窗口
+              </button>
+            </div>
+          </div>
+          <iframe class="qz-frame" :src="quizUrl" @load="applyQuizTheme" title="408 刷题本"></iframe>
+        </section>
+
       </Transition>
     </main>
 
@@ -1880,8 +2062,23 @@ function bootApp() {
         theme: 'dark',
         navs: [
           { k: 'home', t: '首页' }, { k: 'dash', t: '工作内容总览' },
-          { k: 'daily', t: '每日看板' }, { k: 'notes', t: '笔记书架' }
+          { k: 'daily', t: '每日看板' }, { k: 'notes', t: '笔记书架' },
+          { k: 'quiz', t: '408 刷题' }
         ],
+
+        /* 408 刷题库：三个科目的刷题本（同源 iframe 嵌入，localStorage 互通） */
+        quizSubjects: [
+          { key: 'os', name: '操作系统', en: 'Operating System', file: '操作系统刷题本.html',
+            lsKey: 'os-eb3', total: 650, chapters: 16, color: '#A78BFA', color2: '#8B5CF6' },
+          { key: 'jz', name: '计算机组成原理', en: 'Computer Organization', file: '计组刷题本.html',
+            lsKey: 'jz-eb3', total: 604, chapters: 27, color: '#F472B6', color2: '#EC4899' },
+          { key: 'jw', name: '计算机网络', en: 'Computer Network', file: '计网刷题本.html',
+            lsKey: 'jw-eb3', total: 564, chapters: 28, color: '#38BDF8', color2: '#3B82F6' }
+        ],
+        quizProgress: {},        // { os: {a,w,l,b} 统计结果 }
+        quizUrl: '',             // 当前在 iframe 中打开的刷题本
+        quizActive: null,        // 当前科目对象
+        quizNonce: 0,            // iframe 刷新用
 
         payload: null,
         now: Date.now(),
@@ -2040,6 +2237,39 @@ function bootApp() {
         return Object.values(sh).some(v => Number(v) > 0);
       },
 
+      /* ---- 408 刷题库统计 ---- */
+      /** 单科统计：已刷 / 错题 / 正确率 / 错题本 / 覆盖章节 */
+      quizRows() {
+        return this.quizSubjects.map(s => {
+          const p = this.quizProgress[s.key] || {};
+          const done = p.done || 0;
+          return {
+            ...s,
+            done,
+            wrong: p.wrong || 0,
+            book: p.book || 0,
+            attempts: p.attempts || 0,
+            acc: done ? Math.round((p.correct || 0) / p.attempts * 100) : 0,
+            pct: Math.round(done / s.total * 100)
+          };
+        });
+      },
+      quizSum() {
+        const r = this.quizRows;
+        const total = r.reduce((a, x) => a + x.total, 0);
+        const done = r.reduce((a, x) => a + x.done, 0);
+        const book = r.reduce((a, x) => a + x.book, 0);
+        const attempts = r.reduce((a, x) => a + x.attempts, 0);
+        const correct = r.reduce((a, x) => a + ((this.quizProgress[x.key] || {}).correct || 0), 0);
+        return {
+          total, done, book, attempts,
+          left: Math.max(0, total - done),
+          pct: total ? Math.round(done / total * 100) : 0,
+          acc: attempts ? Math.round(correct / attempts * 100) : 0
+        };
+      },
+      quizChapters() { return this.quizSubjects.reduce((a, s) => a + (s.chapters || 0), 0); },
+
       /* ---- 笔记 ---- */
       filteredNotes() { return this.noteTab === '全部' ? this.notes : this.notesOf(this.noteTab); },
       filteredNotesNewest() {
@@ -2055,13 +2285,14 @@ function bootApp() {
       page(p) {
         if (p === 'daily') this.scheduleDonut();
         else if (this.donut) { this.donut.dispose(); this.donut = null; }
+        if (p === 'quiz') this.readQuizProgress();          // 每次进入刷题库都重新读进度
         if (p === 'home') {
           const self = this;
           this.whenReady(function () { return self.$refs.stage; }, function () { self.startThree(); });
         } else this.destroyThree();
       },
       viewDate() { if (this.page === 'daily') this.scheduleDonut(); },
-      theme() { this.$nextTick(() => this.initDonut()); this.refreshThreeTheme(); }
+      theme() { this.$nextTick(() => this.initDonut()); this.refreshThreeTheme(); this.applyQuizTheme(); }
     },
 
     mounted() {
@@ -2377,6 +2608,96 @@ function bootApp() {
         const t = n.title || '未命名';
         return t.length > 11 ? t.slice(0, 11) + '…' : t;
       },
+      /* ---------------- 408 刷题库 ----------------
+         三份刷题本是同源页面，进度直接存在 localStorage（os-eb3 / jz-eb3 / jw-eb3），
+         结构：{ [题目id]: {a:答题次数, w:错次, l:最近是否错, b:是否在错题本} }
+         这里只做「读取统计」，不写入任何刷题数据，避免干扰刷题本自身逻辑。 */
+      readQuizProgress() {
+        const out = {};
+        this.quizSubjects.forEach(s => {
+          let box = null;
+          try { box = JSON.parse(localStorage.getItem(s.lsKey) || 'null'); } catch (e) { box = null; }
+          const p = { done: 0, wrong: 0, book: 0, attempts: 0, correct: 0 };
+          if (box && typeof box === 'object') {
+            Object.keys(box).forEach(id => {
+              const r = box[id] || {};
+              const a = Number(r.a) || 0;
+              const w = Number(r.w) || 0;
+              if (a > 0) p.done++;                     // 做过至少一次
+              if (r.b === true) p.book++;              // 已加入错题本
+              p.attempts += a;
+              p.correct += Math.max(0, a - w);
+              if (w > 0) p.wrong++;                    // 曾经答错的题数
+            });
+          }
+          out[s.key] = p;
+        });
+        this.quizProgress = out;
+      },
+      /** 打开某个科目的刷题本（同源 iframe，localStorage 与主站互通） */
+      openQuiz(s) {
+        this.quizActive = s;
+        this.quizNonce = Date.now();
+        this.quizUrl = '408刷题/' + encodeURIComponent(s.file) + '?t=' + this.quizNonce;
+        this.page = 'quizPlay';
+        window.scrollTo({ top: 0, behavior: 'auto' });
+      },
+      closeQuiz() {
+        this.readQuizProgress();
+        this.quizUrl = '';
+        this.quizActive = null;
+        this.page = 'quiz';
+        window.scrollTo({ top: 0, behavior: 'auto' });
+      },
+      reloadQuiz() {
+        if (!this.quizActive) return;
+        this.quizNonce = Date.now();
+        this.quizUrl = '408刷题/' + encodeURIComponent(this.quizActive.file) + '?t=' + this.quizNonce;
+      },
+      openQuizBlank() {
+        if (!this.quizActive) return;
+        window.open('408刷题/' + encodeURIComponent(this.quizActive.file), '_blank', 'noopener');
+      },
+      /** 把刷题本的主题换成主站的粉色系（改为覆盖 CSS 变量，不动它的任何逻辑与布局） */
+      quizThemeCss() {
+        const head = '.hdr{background:linear-gradient(135deg,#F472B6 0%,#EC4899 48%,#A78BFA 100%) !important}' +
+                     '.btn-p:hover{background:#DB2777 !important}' +
+                     '.tab.on{color:var(--pri) !important}';
+        if (this.theme === 'dark') {
+          return ':root{' +
+            '--bg:#0C0713;--card:#160E20;--text:#F2E9F0;--sub:#A08E9C;' +
+            '--pri:#F472B6;--pri-lt:#3A1B2B;' +
+            '--succ:#34D399;--succ-lt:#12291C;--dang:#FB7185;--dang-lt:#33161A;' +
+            '--warn:#FBBF24;--warn-lt:#33260F;' +
+            '--bdr:#2A1B33;--sh:0 1px 3px rgba(0,0,0,.45);--sh2:0 4px 16px rgba(0,0,0,.55)' +
+            '}' + head +
+            '.btn-s{background:#241733 !important;color:#F2E9F0 !important}' +
+            '.btn-s:hover{background:#31203F !important}' +
+            '.tbar input,.tbar select{background:#160E20 !important;color:#F2E9F0 !important;border-color:#2A1B33 !important}' +
+            'select,input,textarea{background:#160E20 !important;color:#F2E9F0 !important;border-color:#2A1B33 !important}' +
+            'select option{background:#160E20 !important;color:#F2E9F0 !important}' +
+            'thead th{background:#1D1329 !important;color:#CBB9C8 !important;border-color:#2A1B33 !important}' +
+            'tbody tr:hover td,.tbl-w tr:hover td{background:#1D1329 !important}' +
+            '.tbl-w,table,.card{color:var(--text)}' +
+            '.badge,.qcard,.modal,.modal-overlay .modal{color:var(--text)}';
+        }
+        return ':root{--pri:#EC4899;--pri-lt:#FCE7F3}' + head;
+      },
+      applyQuizTheme() {
+        const f = document.querySelector('.qz-frame');
+        if (!f) return;
+        let d = null;
+        try { d = f.contentDocument; } catch (e) { return; }   // 跨域就放弃（正常同源不会）
+        if (!d || !d.head) return;
+        let st = d.getElementById('wb-theme');
+        if (!st) {
+          st = d.createElement('style');
+          st.id = 'wb-theme';
+          d.head.appendChild(st);
+        }
+        st.textContent = this.quizThemeCss();
+      },
+
       /* ---------------- 笔记阅读（独立页面） ---------------- */
       openNote(n) {
         this.activeNote = n;
