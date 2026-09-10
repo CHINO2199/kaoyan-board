@@ -45,12 +45,27 @@ NOTES_DIR = ROOT / "notes_src"          # 明文源：*.md / *.pdf（.gitignore 
 NOTES_ENC = ROOT / "notes_enc"          # 加密产物：PDF 的 .enc（随仓库一起发布）
 
 MASTER_PASSWORD = os.environ.get("KAOYAN_KEY", "YOUR_MASTER_PASSWORD_HERE")
+KEY_FILE = ROOT / ".kaoyan_key"   # 本地密码文件（.gitignore 已排除），省去每次设环境变量
 IV = b"1234567890123456"          # 16 字节固定 IV（与前端保持一致）
 KEY_LEN = 32                      # AES-256
 FILL = b" "                       # 与 Python str.ljust / JS padEnd 等价的空格填充
 
 # 书脊配色仅由前端负责；这里只做数据结构规范
 VALID_STATUS = {"pending", "ongoing", "done"}
+
+
+def resolve_password(cli_key=None) -> str:
+    """密码来源优先级：--key > 环境变量 KAOYAN_KEY > .kaoyan_key 文件 > 脚本常量"""
+    if cli_key:
+        return cli_key
+    env = os.environ.get("KAOYAN_KEY")
+    if env:
+        return env
+    if KEY_FILE.exists():
+        text = KEY_FILE.read_text(encoding="utf-8").strip()
+        if text:
+            return text
+    return MASTER_PASSWORD
 
 
 # ---------------------------------------------------------------- 密钥与加解密
@@ -373,15 +388,19 @@ def main() -> None:
     ap.add_argument("--encrypt-only", action="store_true", help="仅重新加密，不做同步")
     ap.add_argument("--verify", action="store_true", help="解密 data.enc 并打印摘要")
     ap.add_argument("--push", action="store_true", help="提交并推送到 GitHub")
-    ap.add_argument("--key", help="临时指定主密码")
+    ap.add_argument("--key", help="临时指定主密码（也可用环境变量 KAOYAN_KEY 或 .kaoyan_key 文件）")
     ap.add_argument("--today", help="覆盖“今天”的日期（YYYY-MM-DD），便于补录")
     args = ap.parse_args()
 
-    password = args.key or MASTER_PASSWORD
+    password = resolve_password(args.key)
     today = args.today or date.today().isoformat()
 
     if password == "YOUR_MASTER_PASSWORD_HERE":
-        print("! 提醒：你还在使用默认占位主密码，请先修改 update.py 或设置环境变量 KAOYAN_KEY")
+        print("! 提醒：你还在使用默认占位主密码。")
+        print("  请任选一种方式设置自己的密码后重新运行：")
+        print("    1) 把密码写入本目录的 .kaoyan_key 文件（推荐，已被 .gitignore 排除）")
+        print('    2) PowerShell: $env:KAOYAN_KEY="你的密码"')
+        print('    3) python update.py --key 你的密码')
 
     if args.verify:
         do_verify(password)

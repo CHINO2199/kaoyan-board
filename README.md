@@ -25,6 +25,7 @@
 ├── index.html          # 单文件前端（Vue3 + Tailwind + ECharts + CryptoJS + Three.js，全部 CDN）
 ├── data.enc            # ★ 加密数据，网页唯一读取的数据源（可公开托管）
 ├── data.json           # 明文数据（本地工作文件，已被 .gitignore 排除）
+├── .kaoyan_key         # 本地主密码（明文，已被排除；设置后免去每次设环境变量）
 ├── data.sample.json    # 数据模板，字段说明都写在 _doc 里
 ├── update.py           # 加密 / 追加记录 / 同步笔记（含 PDF）/ 一键推送
 ├── notes_src/          # 笔记源文件：*.md 与 *.pdf（明文，已被排除）
@@ -75,16 +76,37 @@ data.json  ──AES-256-CBC──►  base64( IV[16] + 密文 )  ──►  dat
 
 > 密码请只用 **ASCII 字符**。中文密码在 Python 侧按字节截断可能产生无效 UTF-8，导致两端密钥不一致。
 
-修改主密码有两种方式：
+### 怎么改主密码（⚠️ 推送前必做）
 
-```bash
-# 方式一：环境变量（推荐，不写进代码）
-export KAOYAN_KEY="your-new-password"      # Windows: set KAOYAN_KEY=your-new-password
+当前 `data.enc` 是用**示范密码** `kaoyan2027` 加密的，而它明明白白写在本文件里 ——
+任何人拿到你的仓库都能解开。**推送之前请务必换成你自己的密码。**
 
-# 方式二：改 update.py 里的 MASTER_PASSWORD 常量
+任选一种方式设置（优先级：`--key` > 环境变量 > `.kaoyan_key` 文件 > 脚本常量）：
+
+```powershell
+cd "C:\Users\33270\Desktop\ky\每日工作"
+
+# 方式一（推荐）：写进 .kaoyan_key 文件，一次设置永久生效，已被 .gitignore 排除
+Set-Content -Path .kaoyan_key -Value "你的新密码" -NoNewline -Encoding ascii
+
+# 方式二：临时环境变量（只对当前 PowerShell 窗口有效）
+$env:KAOYAN_KEY="你的新密码"
+
+# 方式三：单次命令
+python update.py --key 你的新密码
 ```
 
-改完后重新执行 `python update.py` 重新生成 `data.enc` 即可。
+设置好后执行 `python update.py`，`data.enc` 就会用新密码重新加密：
+
+```powershell
+python update.py
+python update.py --verify     # 确认能正常解密
+```
+
+之后网页需要用**新密码**解锁，`kaoyan2027` 立即失效。
+
+> 密码请只用 **ASCII 字符**（字母、数字、符号），不要用中文。
+> 密码无法找回 —— 数据虽然是你的，但没有密码谁也解不开，包括你自己。建议同时用密码管理器存一份。
 
 ---
 
