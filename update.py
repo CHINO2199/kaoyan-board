@@ -346,6 +346,20 @@ def do_encrypt(data: dict, password: str) -> None:
     print(f"✓ 已生成 {DATA_ENC.name}（{kb:.1f} KB，明文 {len(raw)} 字节）")
 
 
+def do_pull() -> None:
+    """推送前先同步远端：墨墨自动同步任务（GitHub Actions）会不定期提交 data.enc，
+    不先 pull 的话本地推送会被拒绝。data.json 不在仓库里，pull 不会影响本地明文。"""
+    r = subprocess.run(["git", "pull", "--rebase", "--autostash", "--no-edit"],
+                       cwd=ROOT, capture_output=True, text=True)
+    out = ((r.stdout or "") + (r.stderr or "")).strip()
+    if r.returncode != 0:
+        print("! git pull 失败，请手动处理后再推送：")
+        print("  " + out.replace("\n", "\n  ")[:600])
+        sys.exit(1)
+    tail = (out.splitlines() or ["已是最新"])[-1]
+    print(f"  · git pull: {tail}")
+
+
 def do_push(message: str) -> None:
     """提交并推送。注意：data.json / notes_src 属私密明文，已被 .gitignore 排除"""
     try:
@@ -452,6 +466,9 @@ def main() -> None:
     if args.verify:
         do_verify(password)
         return
+
+    if args.push:
+        do_pull()                     # 先同步远端，避免与自动同步任务的提交冲突
 
     data = load_json()
     touched = False
