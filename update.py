@@ -374,15 +374,17 @@ def do_push(message: str) -> None:
         sys.exit(1)
 
 
-def fetch_memo():
-    """调用 tools/memo.py 抓取墨墨背单词今日复习情况"""
+def fetch_memo(day=None):
+    """调用 tools/memo.py 抓取墨墨背单词复习情况；day 可指定学习日（YYYY-MM-DD）"""
     script = ROOT / "tools" / "memo.py"
     if not script.exists():
         print("  ! 未找到 tools/memo.py，跳过墨墨数据")
         return None
     try:
-        r = subprocess.run([sys.executable, str(script), "--json"],
-                           capture_output=True, text=True, encoding="utf-8", timeout=150)
+        cmd = [sys.executable, str(script), "--json"]
+        if day:
+            cmd += ["--day", day]
+        r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", timeout=150)
         if r.returncode != 0:
             msg = (r.stdout or r.stderr or "").strip().replace("\n", " ")[:140]
             print("  ! 墨墨数据获取失败：%s" % msg)
@@ -480,7 +482,7 @@ def main() -> None:
         upsert_milestone(data, load_arg_json(args.milestone))
         touched = True
     if args.memo:
-        memo = fetch_memo()
+        memo = fetch_memo(args.today)
         if memo:
             attach_memo(data, memo, today)
             touched = True

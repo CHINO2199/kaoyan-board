@@ -58,7 +58,17 @@ def call(path: str, body: dict, token: str) -> dict:
         return json.loads(resp.read().decode("utf-8"))
 
 
-def collect(verbose: bool = False) -> dict:
+def current_study_day(now=None) -> str:
+    """墨墨的「学习日」：凌晨 4 点前仍算前一天。
+
+    实现方式是把当前时间往前推 4 小时再取日期 ——
+    这样 09-11 凌晨 02:30 抓到的数据会正确归到 09-10。
+    """
+    now = now or datetime.now(CN)
+    return (now - timedelta(hours=4)).strftime("%Y-%m-%d")
+
+
+def collect(day=None) -> dict:
     token = get_token()
     if not token:
         raise RuntimeError("未找到 MAIMEMO_TOKEN：请设置环境变量，或在项目根目录创建 .memo_token 文件")
@@ -110,8 +120,9 @@ def collect(verbose: bool = False) -> dict:
         out["plan_total"] = 0
 
     now = datetime.now(CN)
-    out["date"] = now.strftime("%Y-%m-%d")
+    out["date"] = day or current_study_day(now)
     out["checked_at"] = now.strftime("%Y-%m-%d %H:%M")
+    out["cross_midnight"] = now.hour < 4     # 凌晨抓取（数据属前一天）
     if errs:
         out["errors"] = errs
     return out
@@ -127,7 +138,11 @@ def render(m: dict) -> str:
 
     lines = []
     lines.append("")
-    lines.append("  墨墨背单词 · %s" % m.get("checked_at", ""))
+    lines.append("  墨墨背单词 · 学习日 %s" % m.get("date", ""))
+    lines.append("  （抓取于 %s%s）" % (
+        m.get("checked_at", ""),
+        "，凌晨时段，数据归前一天" if m.get("cross_midnight") else "",
+    ))
     lines.append("  " + "─" * 46)
     lines.append("  今日进度   %s  %d/%d（%d%%）" % (bar, done, total, pct))
     lines.append("  学习时长   %.1f 分钟" % (m.get("study_minutes") or 0))
@@ -149,9 +164,15 @@ def render(m: dict) -> str:
 
 
 def main() -> None:
-    as_json = "--json" in sys.argv
+    argv = sys.argv[1:]
+    as_json = "--json" in argv
+    day = None
+    if "--day" in argv:
+        i = argv.index("--day")
+        if i + 1 < len(argv):
+            day = argv[i + 1].strip() or None
     try:
-        m = collect()
+        m = collect(day)
     except Exception as e:
         if as_json:
             print(json.dumps({"error": str(e)}, ensure_ascii=False))
