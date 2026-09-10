@@ -17,6 +17,16 @@ _src/
 preview/
 改进1/
 
+# ---- 用户资料（可能临时放进工作区，绝不部署）----
+进度/
+*.lnk
+*.doc
+*.docx
+*.xls
+*.xlsx
+*.ppt
+*.pptx
+
 # ---- 系统与依赖 ----
 .DS_Store
 Thumbs.db

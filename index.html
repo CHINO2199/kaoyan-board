@@ -489,7 +489,7 @@ html[data-theme="light"] .tgl i{transform:translateX(26px)}
 /* 日期标尺 */
 .gt-head{position:sticky;top:0;z-index:5;display:flex;background:var(--glass-2);backdrop-filter:blur(16px);border-bottom:1px solid var(--bd)}
 .gt-corner{
-  position:sticky;left:0;z-index:6;flex:0 0 208px;width:208px;
+  position:sticky;left:0;z-index:6;flex:0 0 236px;width:236px;
   display:flex;align-items:flex-end;padding:0 14px 10px;font-size:11px;color:var(--tx-3);
   background:var(--glass-2);backdrop-filter:blur(16px);border-right:1px solid var(--bd);letter-spacing:.06em;
 }
@@ -515,7 +515,7 @@ html[data-theme="light"] .tgl i{transform:translateX(26px)}
 .gt-row:hover{background:var(--glass)}
 .gt-row:last-child{border-bottom:none}
 .gt-name{
-  position:sticky;left:0;z-index:4;flex:0 0 208px;width:208px;
+  position:sticky;left:0;z-index:4;flex:0 0 236px;width:236px;
   padding:9px 14px;display:flex;flex-direction:column;justify-content:center;gap:4px;
   background:var(--glass-2);backdrop-filter:blur(16px);border-right:1px solid var(--bd);
 }
@@ -1272,7 +1272,7 @@ html[data-theme="dark"] .shelf-board{background:linear-gradient(180deg,#4A2038,#
                       <span>{{ ms.subject }}</span>
                       <span>·</span>
                       <span v-if="ms.status==='done'">已完成</span>
-                      <span v-else-if="ms.progress>0">进行中 {{ ms.progress }}%</span>
+                      <span v-else-if="ms.status==='ongoing'">进行中<span v-if="ms.progress>0"> · {{ ms.progress }}%</span></span>
                       <span v-else>未启动</span>
                     </div>
                   </div>
