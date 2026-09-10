@@ -1,0 +1,28 @@
+# ---- 明文私密数据：绝对不要上传 ----
+data.json
+notes_src/
+ds-1.md
+
+# ---- 设计参考图（无需部署到 Pages）----
+*参考.png
+*参考.jpg
+
+# ---- 构建中间产物 ----
+_src/
+.local/
+
+# ---- 工具与开发产物（不进 Pages）----
+.workbuddy/
+preview/
+改进1/
+
+# ---- 系统与依赖 ----
+.DS_Store
+Thumbs.db
+desktop.ini
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.idea/
+.vscode/

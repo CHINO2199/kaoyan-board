@@ -1,0 +1,87 @@
+{
+  "_doc": {
+    "说明": "考研冲刺看板的数据模板。字段齐全的空白骨架，复制为 data.json 后填写即可。",
+    "加密": "python update.py 会把 data.json 加密为 data.enc（AES-256-CBC，base64(IV+密文)），网页只读取 data.enc。",
+    "字段": {
+      "meta.exam_date": "考试日期 YYYY-MM-DD（倒计时终点，默认当天 08:30）",
+      "meta.sprint_start": "冲刺起点，用于计算总进度",
+      "meta.total_days": "总天数，用于计算冲刺进度百分比",
+      "meta.quotes": "每日一句，按日期轮换",
+      "milestones[]": "里程碑：planned_* 紫色预计工期；actual_* 蓝色实际工期；actual_end 为 null 表示仍在进行",
+      "daily_logs[]": "每日记录：subject_hours 驱动环形圆盘图；time_segments 驱动分时段列表",
+      "notes[]": "笔记：content 为 Markdown 原文，网页渲染到书架阅读抽屉里"
+    }
+  },
+
+  "meta": {
+    "exam_title": "2027 考研",
+    "exam_date": "2026-12-19",
+    "sprint_start": "2026-09-10",
+    "total_days": 100,
+    "owner": "研友",
+    "subjects": ["数学", "408", "政治", "英语"],
+    "quotes": [
+      "把每一个今天过扎实，考场上的底气就多一分。",
+      "不必慌乱，你只需要比昨天多走一页。",
+      "所谓坚持，是把大目标拆成今天这四小时。",
+      "错题不是耻辱，是明天要拿的分。",
+      "倒计时不是催促，是提醒你还来得及。"
+    ]
+  },
+
+  "milestones": [
+    {
+      "id": "m1",
+      "title": "数学真题二刷",
+      "subject": "数学",
+      "planned_start": "2026-09-08",
+      "planned_end": "2026-09-24",
+      "actual_start": "2026-09-09",
+      "actual_end": null,
+      "progress": 58,
+      "status": "ongoing",
+      "note": "近 10 年真题逐套重刷，错题单独整理"
+    },
+    {
+      "id": "m2",
+      "title": "政治背诵手册第一遍",
+      "subject": "政治",
+      "planned_start": "2026-10-09",
+      "planned_end": "2026-11-12",
+      "actual_start": null,
+      "actual_end": null,
+      "progress": 0,
+      "status": "pending",
+      "note": ""
+    }
+  ],
+
+  "daily_logs": [
+    {
+      "date": "2026-09-10",
+      "total_hours": 10,
+      "subject_hours": { "数学": 4.5, "英语": 2.0, "政治": 1.5, "408": 2.0 },
+      "time_segments": [
+        { "start": "07:00", "end": "08:30", "subject": "英语", "content": "核心词 100 个 + 真题阅读 2 篇" },
+        { "start": "08:50", "end": "12:50", "subject": "数学", "content": "真题 2018 套卷 + 线代专项" },
+        { "start": "14:00", "end": "16:00", "subject": "408", "content": "数据结构错题复盘" },
+        { "start": "19:00", "end": "20:30", "subject": "政治", "content": "马原第 7 讲 + 1000 题 40 道" }
+      ],
+      "completed_tasks": ["数学真题 2018 套卷", "专业课背书 2 章", "真题阅读 2 篇"],
+      "reflection": "今天学了 10 个小时。数学线性代数还是错很多，**明天得专项巩固**。",
+      "tomorrow_plan": ["线代向量组专项 2h", "数据结构图论错题回炉"]
+    }
+  ],
+
+  "notes": [
+    {
+      "id": "n1",
+      "subject": "408",
+      "title": "数据结构 · 易错点速记",
+      "file": "ds-1.md",
+      "uploaded_at": "2026-09-09",
+      "tags": ["数据结构", "易错点"],
+      "content": "1. 稀疏矩阵采用三元组压缩存储，失去随机存取特性。\n2. 线索二叉树是**物理结构**。"
+    }
+  ]
+}
