@@ -491,6 +491,9 @@ RAL();
   var DFLT={token:'',gist:'c839b9e59f07ae83abd5a1bb256821a9',file:''};
   var cfg={token:DFLT.token,gist:DFLT.gist,file:''};
   try{var _r=localStorage.getItem(CFG_KEY);if(_r){var _o=JSON.parse(_r);cfg.token=_o.token||cfg.token;cfg.gist=_o.gist||cfg.gist;cfg.file=_o.file||'';}}catch(e){}
+  /* 修复：每科固定各自的云端文件（os-eb3.json / jz-eb3.json / jw-eb3.json），
+     原先三科共用一个 Gist 文件，打开任一科目都会把别科的进度拉过来覆盖本地 */
+  if(!(cfg.file&&cfg.file.indexOf(SK)===0))cfg.file=SK+'.json';
   var busy=false,lastPull=0,timer=null,dot=null;
   var _rawSS=(typeof SS==='function')?SS:null;
 
@@ -500,7 +503,8 @@ RAL();
   function pickFile(g){
     var fs=g.files||{},ns=Object.keys(fs);
     if(!ns.length)return null;
-    if(cfg.file&&fs[cfg.file]&&!fs[cfg.file].truncated)return cfg.file;
+    /* 只认本科目自己的文件；不存在就返回 null（提示无文件），绝不把别科的数据拉来覆盖本地 */
+    if(cfg.file)return (fs[cfg.file]&&!fs[cfg.file].truncated)?cfg.file:null;
     var j=ns.filter(function(n){return /\.json$/i.test(n)&&!fs[n].truncated;});
     if(j.length)return j[0];
     var a=ns.filter(function(n){return !fs[n].truncated;});
@@ -510,7 +514,7 @@ RAL();
   function getMeta(){try{var r=localStorage.getItem(META_KEY);var m=r?JSON.parse(r):{};return {updatedAt:m.updatedAt||0};}catch(e){return {updatedAt:0};}}
   function setMetaAt(t){try{localStorage.setItem(META_KEY,JSON.stringify({updatedAt:t}));}catch(e){}}
   // ---- 云端标准结构 {updatedAt, rc, ed} ----
-  function buildState(){return {updatedAt:getMeta().updatedAt,rc:LS(),ed:(typeof loadEdits==='function')?loadEdits():{}};}
+  function buildState(){return {updatedAt:getMeta().updatedAt,sk:SK,rc:LS(),ed:(typeof loadEdits==='function')?loadEdits():{}};}
   function parseCloud(content){
     var o=null;try{o=JSON.parse(content);}catch(e){return null;}
     if(!o||typeof o!=='object'||Array.isArray(o))return null;
@@ -525,10 +529,17 @@ RAL();
     return api('https://api.github.com/gists/'+cfg.gist,'GET')
       .then(function(r){if(!r.ok)throw new Error('拉取失败 HTTP '+r.status);return r.json();})
       .then(function(g){
-        var fn=pickFile(g);if(!fn)throw new Error('Gist 中没有可同步的文件');
+        var fn=pickFile(g);
+        if(!fn){
+          /* 修复：云端还没有本科目的文件。本地有进度就上传建立，没有就静默等待，绝不拉别科数据 */
+          if((getMeta().updatedAt||0)>0){setDot('🟡','上传中…');return _push(cfg.file);}
+          setDot('🟢','已同步 '+new Date().toLocaleTimeString());return null;
+        }
         cfg.file=fn;saveCfg();
         var cloud=parseCloud(g.files[fn].content);
         if(!cloud){setDot('🟢','已同步 '+new Date().toLocaleTimeString());return null;}
+        /* 修复：云端数据若标注了别的科目，直接跳过，绝不覆盖本地 */
+        if(cloud.sk&&cloud.sk!==SK){setDot('🔴','云端文件非本科目数据，已跳过');return null;}
         var cAt=cloud.updatedAt||0,lAt=getMeta().updatedAt||0;
         if(cAt>lAt){
           // 云端最新 → 直接完全覆盖本地（Timestamp-First）
@@ -540,8 +551,9 @@ RAL();
           if(typeof RAL==='function'){try{RAL();}catch(e){}}
           return {mode:'pull'};
         }else if(lAt>cAt){
-          // 本地最新 → 上传覆盖云端
-          return G_push();
+          // 本地最新 → 上传覆盖云端（原实现因 busy 锁被吞掉，这里改用 _push）
+          setDot('🟡','上传中…');
+          return _push(cfg.file);
         }
         setDot('🟢','已同步 '+new Date().toLocaleTimeString());
         return null;
@@ -549,26 +561,28 @@ RAL();
       .catch(function(e){setDot('🔴',String((e&&e.message)||e));return null;})
       .then(function(v){busy=false;return v;});
   }
+  // ---- 上传核心（不带 busy 锁，供拉取流程内部复用）----
+  function _push(fn){
+    var payload={files:{}};
+    payload.files[fn]={content:JSON.stringify(buildState())};
+    return api('https://api.github.com/gists/'+cfg.gist,'PATCH',payload)
+      .then(function(r){if(!r.ok)throw new Error('上传失败 HTTP '+r.status);return r.json();})
+      .then(function(){setDot('🟢','已同步 '+new Date().toLocaleTimeString());return true;})
+      .catch(function(e){setDot('🔴',String((e&&e.message)||e));return null;});
+  }
   // ---- 上传：本地状态覆盖云端 ----
   function G_push(){
     if(!cfg.gist||!cfg.token){if(!cfg.token)setDot('⚪','未配置 Token，点击设置');return Promise.resolve(null);}
     if(busy)return Promise.resolve(null);busy=true;
     setDot('🟡','上传中…');
-    function doPush(fn){
-      var payload={files:{}};
-      payload.files[fn]={content:JSON.stringify(buildState())};
-      return api('https://api.github.com/gists/'+cfg.gist,'PATCH',payload)
-        .then(function(r){if(!r.ok)throw new Error('上传失败 HTTP '+r.status);return r.json();})
-        .then(function(){setDot('🟢','已同步 '+new Date().toLocaleTimeString());return true;})
-        .catch(function(e){setDot('🔴',String((e&&e.message)||e));return null;});
-    }
-    var p;
-    if(cfg.file){p=Promise.resolve(cfg.file);}
-    else{
-      p=api('https://api.github.com/gists/'+cfg.gist,'GET').then(function(r){if(!r.ok)throw new Error('拉取失败 HTTP '+r.status);return r.json();})
-        .then(function(g){var fn=pickFile(g);if(!fn)throw new Error('Gist 中没有可同步的文件');cfg.file=fn;saveCfg();return fn;});
-    }
-    return p.then(doPush).then(function(v){busy=false;return v;}).catch(function(e){busy=false;setDot('🔴',String((e&&e.message)||e));return null;});
+    /*
+     * 修复：只写本科目自己的文件（cfg.file 已在加载时强制为 SK 前缀）。
+     * 原实现在文件名为空时会 GET 云端并“随便挑一个 json 文件”上传，
+     * 这是三科数据互相覆盖的另一条路径，一并去掉。
+     */
+    return _push(cfg.file||(SK+'.json'))
+      .then(function(v){busy=false;return v;})
+      .catch(function(e){busy=false;setDot('🔴',String((e&&e.message)||e));return null;});
   }
   function G_schedule(){if(!cfg.gist||!cfg.token)return;clearTimeout(timer);timer=setTimeout(G_push,3000);}
   function G_force(){if(!cfg.gist||!cfg.token)return;clearTimeout(timer);G_push();}
@@ -626,7 +640,10 @@ RAL();
       if(s)s.onclick=function(){
         cfg.token=document.getElementById('g-token').value.trim();
         cfg.gist=document.getElementById('g-gist').value.trim()||'';
-        cfg.file=document.getElementById('g-file').value.trim();
+        /* 修复：本科目的云端文件名必须以科目代号开头，避免三科互相覆盖 */
+        var _f=document.getElementById('g-file').value.trim();
+        if(!(_f&&_f.indexOf(SK)===0))_f=SK+'.json';
+        cfg.file=_f;
         saveCfg();
         var msg=document.getElementById('g-msg');
         if(!cfg.token){msg.textContent='请先填写 GitHub Token（状态点⚪点击配置）';setDot('⚪','未配置 Token，点击设置');return;}
