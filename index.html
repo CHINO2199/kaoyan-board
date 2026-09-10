@@ -587,8 +587,26 @@ html[data-theme="light"] .gt-plan .lbl{text-shadow:none}
 .heat-c.l2{background:rgba(236,72,153,.5)}
 .heat-c.l3{background:rgba(219,39,119,.78)}
 .heat-c.l4{background:linear-gradient(135deg,var(--pink-500),var(--violet-d));box-shadow:0 0 10px rgba(236,72,153,.55)}
+.heat-c.l5{background:linear-gradient(135deg,#EC4899,#BE185D);box-shadow:0 0 12px rgba(219,39,119,.65)}
+.heat-c.l6{background:linear-gradient(135deg,#DB2777,#7C3AED);box-shadow:0 0 16px rgba(219,39,119,.9),0 0 5px rgba(167,139,250,.7)}
 .heat-c.future{opacity:.28}
 .heat-axis{display:flex;gap:4px;font-size:9.5px;color:var(--tx-3);margin-top:6px}
+.heat-legend{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;font-size:10.5px;color:var(--tx-3)}
+.heat-legend-sw{display:inline-flex;align-items:center;gap:6px}
+.heat-legend-sw em{font-style:normal}
+
+/* 408 刷题 · 近 100 题正确率 */
+.qz-acc-row{padding:11px 0;border-top:1px solid var(--bd-2)}
+.qz-acc-row:first-of-type{border-top:0;padding-top:2px}
+.qz-acc-head{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.qz-acc-dot{width:9px;height:9px;border-radius:50%;flex:none}
+.qz-acc-head>b{font-size:12.5px;color:var(--tx-2);letter-spacing:.02em}
+.qz-acc-delta{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.02em;font-variant-numeric:tabular-nums}
+.qz-acc-delta.up{color:#059669;background:rgba(16,185,129,.14)}
+.qz-acc-delta.down{color:#E11D48;background:rgba(244,63,94,.14)}
+.qz-acc-val{margin-left:auto;font-size:16.5px;color:var(--tx)}
+.qz-acc-foot{display:flex;justify-content:space-between;gap:8px;margin-top:7px;font-size:10.5px;color:var(--tx-3);font-variant-numeric:tabular-nums}
+.qz-note{margin-top:13px;font-size:10.5px;line-height:1.8;color:var(--tx-3)}
 
 /* ==========================================================================
    10. 每日看板
@@ -1785,6 +1803,64 @@ html[data-theme="dark"] .shelf-board{background:linear-gradient(180deg,#4A2038,#
             </div>
           </div>
 
+          <!-- 刷题热力图 + 近 100 题正确率 -->
+          <div class="g g-2u" style="margin-bottom:16px">
+            <div class="card card-pad">
+              <div class="sec-head" style="margin-bottom:12px">
+                <div class="card-title"><span class="dot"></span>刷题强度热力图</div>
+                <div class="card-sub">近 {{ qzHeat.weeks }} 周 · 累计 {{ qzHeat.total }} 题 · 今天 {{ qzTodayCount }} 题</div>
+              </div>
+              <div class="heat">
+                <div v-for="(col,ci) in qzHeat.cols" :key="'qhc'+ci" class="heat-col">
+                  <div v-for="c in col" :key="c.iso" class="heat-c"
+                       :class="[c.lv?('l'+c.lv):'', c.future?'future':'']"
+                       @mouseenter="showQzTip($event,c)" @mouseleave="hideTip"></div>
+                </div>
+              </div>
+              <div class="heat-axis">
+                <span v-for="(m,mi) in qzHeat.months" :key="'qhm'+mi" :style="{width:(m.len*(13+4))+'px'}">{{ m.label }}</span>
+              </div>
+              <div class="heat-legend">
+                <span>{{ qzHeat.active }} 天有刷题{{ qzHeat.best ? ' · 单日最多 ' + qzHeat.best + ' 题' : '' }}</span>
+                <span class="heat-legend-sw">
+                  <em>少</em>
+                  <i class="heat-c" style="display:block" title="0 题"></i>
+                  <i class="heat-c l1" style="display:block" title="1–19 题"></i>
+                  <i class="heat-c l2" style="display:block" title="20–29 题"></i>
+                  <i class="heat-c l3" style="display:block" title="30–39 题"></i>
+                  <i class="heat-c l4" style="display:block" title="40–49 题"></i>
+                  <i class="heat-c l5" style="display:block" title="50–59 题"></i>
+                  <i class="heat-c l6" style="display:block" title="60 题及以上"></i>
+                  <em>多</em>
+                </span>
+              </div>
+              <div class="qz-note">题库原始记录不带时间戳，所以热力图从今天起按天记账（凌晨 4 点前算前一天）；记录保存在本机浏览器。</div>
+            </div>
+
+            <div class="card card-pad">
+              <div class="sec-head" style="margin-bottom:6px">
+                <div class="card-title"><span class="dot"></span>近 100 题正确率</div>
+                <div class="card-sub">三科手感追踪</div>
+              </div>
+              <div class="qz-acc-row" v-for="r in qzRecent" :key="r.key">
+                <div class="qz-acc-head">
+                  <span class="qz-acc-dot" :style="{background:'linear-gradient(135deg,'+r.color+','+r.color2+')'}"></span>
+                  <b>{{ r.name }}</b>
+                  <span class="qz-acc-delta" v-if="r.delta!==null"
+                        :class="r.delta>0?'up':(r.delta<0?'down':'')">{{ r.delta>0?'+':'' }}{{ r.delta }}%</span>
+                  <b class="num qz-acc-val">{{ r.acc===null ? '—' : r.acc + '%' }}</b>
+                </div>
+                <div class="bar"><i :style="{width:(r.acc||0)+'%',background:'linear-gradient(90deg,'+r.color+','+r.color2+')'}"></i></div>
+                <div class="qz-acc-foot">
+                  <span v-if="r.n">答对 {{ r.ok }} / {{ r.n }} 题</span>
+                  <span v-else style="color:var(--tx-3)">还没有作答记录</span>
+                  <span v-if="r.all>r.n">已记录 {{ r.all }} 次作答</span>
+                </div>
+              </div>
+              <div class="qz-note" v-if="!qzLoggedTotal">在站内打开任一科目开始做题，正确率就会从第一次作答开始累计；绿色 +x% 表示近 100 题比历史平均更好。</div>
+            </div>
+          </div>
+
           <div class="g g-3" style="margin-bottom:16px">
             <div class="qz-card" v-for="s in quizRows" :key="s.key"
                  :style="{'--qc1':s.color,'--qc2':s.color2}"
@@ -1857,7 +1933,7 @@ html[data-theme="dark"] .shelf-board{background:linear-gradient(180deg,#4A2038,#
               </button>
             </div>
           </div>
-          <iframe class="qz-frame" :src="quizUrl" @load="applyQuizTheme" title="408 刷题本"></iframe>
+          <iframe class="qz-frame" :src="quizUrl" @load="onQuizLoad" title="408 刷题本"></iframe>
         </section>
 
       </Transition>
@@ -1890,6 +1966,16 @@ function bootApp() {
   const DAY_W = 36;          // 甘特图单日列宽（px，与 CSS 一致）
   const WIN_DAYS = 70;       // 大日历窗口天数（10 周）
   const HEAT_WEEKS = 18;     // 热力图周数
+  /* ---- 408 刷题自建日志 ----
+     刷题本自己的记录 {a,w,l,b} 没有时间戳，画不了「每天刷了几道」。
+     所以在父页面（同源）把刷题本的 REC(id,ok) 包一层，按天记账到 localStorage：
+     qz-log-v1 = { v:1, days:{ '2026-09-10':{os:12,jz:5,jw:0} }, recent:{ os:[1,0,1,...] } }
+     recent 每科只留最近 QZ_KEEP 条（1=对 0=错），用来算「近 100 题正确率」。 */
+  const QZ_LOG_KEY = 'qz-log-v1';
+  const QZ_RECENT = 100;     // 正确率统计窗口（近 100 题）
+  const QZ_KEEP = 400;       // 每科最多留存的作答记录条数
+  const QZ_DAY_CUT = 4;      // 凌晨 4 点前算前一天（与墨墨、每日看板同口径）
+  const QZ_LEVELS = [20, 30, 40, 50, 60];   // 热力色阶阈值：道/天
   const LS_KEY = 'kaoyan.key.v1';
   const LS_THEME = 'kaoyan.theme.v1';
   const PAD_BYTE = 0x20;     // 密钥不足 32 字节时用空格补齐（与 Python ljust 对齐）
@@ -1963,6 +2049,39 @@ function bootApp() {
   function diffDays(a, b) { return Math.round((parseISO(a) - parseISO(b)) / 86400000); }
   const WD = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
   function weekdayOf(iso) { return WD[(parseISO(iso).getDay() + 6) % 7]; }
+
+  /* ---- 408 刷题日志（自建，见顶部 QZ_LOG_KEY 注释） ---- */
+  /** 学习日：把当前时刻前推 4 小时再取日期 → 凌晨 4 点前算前一天（与墨墨同口径） */
+  function qzStudyDay() { return isoOf(new Date(Date.now() - QZ_DAY_CUT * 3600000)); }
+
+  function qzLevel(n) {
+    if (!n || n <= 0) return 0;
+    for (let i = 0; i < QZ_LEVELS.length; i++) if (n < QZ_LEVELS[i]) return i + 1;
+    return QZ_LEVELS.length + 1;      // ≥ 60
+  }
+
+  function qzLogLoad() {
+    try {
+      const o = JSON.parse(localStorage.getItem(QZ_LOG_KEY) || 'null');
+      if (o && o.v === 1 && o.days && o.recent) return o;
+    } catch (e) { /* 损坏就重建 */ }
+    return { v: 1, days: {}, recent: { os: [], jz: [], jw: [] } };
+  }
+  function qzLogSave(o) {
+    try { localStorage.setItem(QZ_LOG_KEY, JSON.stringify(o)); } catch (e) { /* 隐私模式等 */ }
+  }
+  function qzLogAdd(subjectKey, ok) {
+    const o = qzLogLoad();
+    const day = qzStudyDay();
+    const d = o.days[day] || (o.days[day] = {});
+    d[subjectKey] = (Number(d[subjectKey]) || 0) + 1;
+    const arr = o.recent[subjectKey] || (o.recent[subjectKey] = []);
+    arr.push(ok ? 1 : 0);
+    if (arr.length > QZ_KEEP) arr.splice(0, arr.length - QZ_KEEP);
+    const keys = Object.keys(o.days).sort();
+    if (keys.length > 400) keys.slice(0, keys.length - 400).forEach(k => { delete o.days[k]; });
+    qzLogSave(o);
+  }
 
   /* ---- CryptoJS WordArray <-> Uint8Array ---- */
   function u8ToWA(u8) {
@@ -2076,6 +2195,7 @@ function bootApp() {
             lsKey: 'jw-eb3', total: 564, chapters: 28, color: '#38BDF8', color2: '#3B82F6' }
         ],
         quizProgress: {},        // { os: {a,w,l,b} 统计结果 }
+        qzLog: qzLogLoad(),      // 自建作答日志：{ days:{iso:{os,jz,jw}}, recent:{os:[1,0..]} }
         quizUrl: '',             // 当前在 iframe 中打开的刷题本
         quizActive: null,        // 当前科目对象
         quizNonce: 0,            // iframe 刷新用
@@ -2272,6 +2392,59 @@ function bootApp() {
       },
       quizChapters() { return this.quizSubjects.reduce((a, s) => a + (s.chapters || 0), 0); },
 
+      /* ---- 刷题热力图：近 18 周，每天三科作答总数 ---- */
+      qzHeat() {
+        const weeks = HEAT_WEEKS;
+        const today = parseISO(this.todayISO);
+        const dow = (today.getDay() + 6) % 7;                 // 周一 = 0
+        const start = addDays(today, -(dow + (weeks - 1) * 7));
+        const days = (this.qzLog && this.qzLog.days) || {};
+        const cols = [], months = [];
+        let lastMonth = -1, total = 0, active = 0, best = 0;
+        for (let w = 0; w < weeks; w++) {
+          const col = [];
+          for (let k = 0; k < 7; k++) {
+            const d = addDays(start, w * 7 + k), iso = isoOf(d);
+            const per = days[iso] || {};
+            let n = 0;
+            this.quizSubjects.forEach(s => { n += Number(per[s.key]) || 0; });
+            total += n;
+            if (n > 0) active++;
+            if (n > best) best = n;
+            col.push({ iso, n, per, lv: qzLevel(n), future: iso > this.todayISO });
+          }
+          cols.push(col);
+          const mo = addDays(start, w * 7).getMonth();
+          if (mo !== lastMonth) { months.push({ label: (mo + 1) + '月', len: 1 }); lastMonth = mo; }
+          else months[months.length - 1].len++;
+        }
+        return { cols, months, weeks, total, active, best };
+      },
+      /** 今天已刷题数（三科合计），用于卡片副标题 */
+      qzTodayCount() {
+        const per = (this.qzLog.days || {})[this.todayISO] || {};
+        let n = 0;
+        this.quizSubjects.forEach(s => { n += Number(per[s.key]) || 0; });
+        return n;
+      },
+      /** 三科「近 100 题」正确率；delta = 近 100 题 − 累计（正数=手感在回升） */
+      qzRecent() {
+        return this.quizSubjects.map(s => {
+          const all = ((this.qzLog.recent || {})[s.key]) || [];
+          const win = all.slice(-QZ_RECENT);
+          const n = win.length;
+          const ok = win.reduce((a, x) => a + (x ? 1 : 0), 0);
+          const p = this.quizProgress[s.key] || {};
+          const overall = p.attempts ? Math.round((p.correct || 0) / p.attempts * 100) : null;
+          const acc = n ? Math.round(ok / n * 100) : null;
+          return {
+            ...s, n, ok, acc, overall, all: all.length,
+            delta: (acc !== null && overall !== null) ? acc - overall : null
+          };
+        });
+      },
+      qzLoggedTotal() { return this.qzRecent.reduce((a, r) => a + r.all, 0); },
+
       /* ---- 笔记 ---- */
       filteredNotes() { return this.noteTab === '全部' ? this.notes : this.notesOf(this.noteTab); },
       filteredNotesNewest() {
@@ -2461,7 +2634,11 @@ function bootApp() {
           s: s % 60
         };
       },
-      go(p) { this.page = p; window.scrollTo({ top: 0, behavior: 'smooth' }); },
+      go(p) {
+        this.page = p;
+        if (p === 'quiz') { this.readQuizProgress(); this.readQzLog(); }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      },
 
       /* ---------------- 甘特 ---------------- */
       resetWindow() {
@@ -2647,6 +2824,7 @@ function bootApp() {
       },
       closeQuiz() {
         this.readQuizProgress();
+        this.readQzLog();
         this.quizUrl = '';
         this.quizActive = null;
         this.page = 'quiz';
@@ -2699,6 +2877,46 @@ function bootApp() {
           d.head.appendChild(st);
         }
         st.textContent = this.quizThemeCss();
+      },
+
+      /* ---- 刷题作答记账：包装刷题本的 REC(id, ok)，按天写入 qz-log-v1 ----
+         刷题本所有答题路径（章节 / 随机 / 组卷 / 错题重练）都经过 REC，
+         在这里挂钩 = 不改动刷题本一个字节。每次 iframe 加载只挂一次。 */
+      hookQuizFrame() {
+        const f = document.querySelector('.qz-frame');
+        if (!f) return;
+        let w = null;
+        try { w = f.contentWindow; } catch (e) { return; }
+        if (!w || !w.REC || w.__wbQzHooked) return;
+        const self = this;
+        const key = (this.quizActive && this.quizActive.key) || 'os';
+        const orig = w.REC;
+        w.REC = function (id, ok) {
+          try { qzLogAdd(key, !!ok); self.readQzLog(); } catch (e) { /* 记账失败不影响做题 */ }
+          return orig.apply(this, arguments);
+        };
+        w.__wbQzHooked = true;
+      },
+      onQuizLoad() {
+        this.applyQuizTheme();
+        this.hookQuizFrame();
+      },
+      readQzLog() { this.qzLog = qzLogLoad(); },
+      showQzTip(ev, c) {
+        const r = ev.currentTarget.getBoundingClientRect();
+        let html;
+        if (c.future) html = '<div style="color:var(--tx-3)">尚未到来</div>';
+        else if (!c.n) html = '<div style="color:var(--tx-3)">这天没刷题</div>';
+        else {
+          const rows = this.quizSubjects
+            .filter(s => c.per && c.per[s.key])
+            .map(s => `<div><span class="k">${s.name}</span>${c.per[s.key]} 题</div>`).join('');
+          html = rows + `<div><span class="k">合计</span>${c.n} 道</div>`;
+        }
+        this.tip = {
+          show: true, x: Math.min(r.left, window.innerWidth - 260), y: r.bottom + 10,
+          title: c.iso, html
+        };
       },
 
       /* ---------------- 笔记阅读（独立页面） ---------------- */

@@ -93,12 +93,79 @@ tr:hover td{background:#fafafa}
 .edited-mark{display:inline-block;font-size:10px;background:var(--warn);color:#fff;border-radius:3px;padding:1px 5px;margin-left:4px}
 .slot-hint{font-size:11px;color:var(--sub);margin-left:6px}
 @media(max-width:640px){.wrap{padding:0 10px}.qcard{padding:18px}.tab{padding:12px 14px;font-size:13px}.hdr h1{font-size:20px}.stat-row{grid-template-columns:repeat(2,1fr)}.modal{padding:20px}}
+/* ===== 📊 学习看板 + UI 优化（新增，仅追加不覆盖） ===== */
+:root{--rds:14px}
+.tab{border-radius:10px 10px 0 0}
+.tab:hover{color:var(--text);background:rgba(0,0,0,.035)}
+.card{transition:box-shadow .18s ease,border-color .18s ease}
+.btn{transition:transform .12s ease,box-shadow .12s ease,background .15s ease,opacity .15s ease}
+.btn:hover{box-shadow:var(--sh2)}
+.btn:active{transform:scale(.97)}
+.tbl-w table tbody tr{transition:background .12s ease}
+.hdr{padding:26px 0}
+.hdr h1{font-size:25px;letter-spacing:.6px}
+.hdr p{font-size:12.5px;color:rgba(255,255,255,.72);margin-top:4px}
+/* 看板通用 */
+.dash-hero{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.dh-hi{font-size:19px;font-weight:800}
+.dh-sub{font-size:12.5px;color:var(--sub);margin-top:5px}
+.dh-badge{font-size:12px;font-weight:700;color:var(--pri);background:var(--pri-lt);padding:7px 15px;border-radius:999px;white-space:nowrap}
+.dash-grid{display:grid;grid-template-columns:1.28fr 1fr;gap:16px;align-items:start}
+.dash-grid>.card,.dash-grid>div>.card{margin-bottom:16px}
+.dash-h3{font-size:14px;font-weight:800;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.dash-h3 .hint{font-size:11px;color:var(--sub);font-weight:400}
+/* 章节掌握 */
+.chp{margin-bottom:13px}
+.chp:last-child{margin-bottom:0}
+.chp-top{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;margin-bottom:5px}
+.chp-name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chp-cnt{color:var(--sub);font-size:11.5px;flex:none;font-variant-numeric:tabular-nums}
+.chp-bar{display:flex;height:8px;border-radius:999px;overflow:hidden;background:#eef0f3}
+.chp-bar i{display:block;height:100%}
+.chp-bar i.mas{background:var(--succ)}
+.chp-bar i.mid{background:var(--warn)}
+.chp-bar i.bad{background:var(--dang)}
+.dash-legend{display:flex;gap:14px;font-size:11.5px;color:var(--sub);flex-wrap:wrap;margin-top:12px}
+.dash-legend b{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px}
+/* 热力图 */
+.heat{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,11px);gap:3px;overflow-x:auto;padding-bottom:6px}
+.heat i{display:block;width:11px;height:11px;border-radius:3px;background:#eef0f3}
+.heat i.l1{background:#cdeccf}
+.heat i.l2{background:#8ddb9b}
+.heat i.l3{background:#34c759}
+.heat i.l4{background:#1c8a3c}
+.heat-foot{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--sub);margin-top:8px}
+.heat-foot i{width:11px;height:11px;border-radius:3px;background:#eef0f3;display:block}
+/* 任务甘特 */
+.gantt-head{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;font-size:11px;color:var(--sub);margin-bottom:6px;text-align:center}
+.gantt-row{position:relative;height:30px;border-radius:9px;background:#f5f7fa;margin-bottom:6px}
+.gantt-row .gtask{position:absolute;top:3px;height:24px;line-height:24px;padding:0 9px;border-radius:7px;font-size:11.5px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;background:var(--pri);box-shadow:0 1px 4px rgba(0,113,227,.28)}
+.gantt-row .gtask:hover{filter:brightness(1.08)}
+.gantt-row .gtask.c2{background:#7a5af8}
+.gantt-row .gtask.c3{background:#f59f0b}
+.gantt-row .gtask.c4{background:#e5484d}
+.gantt-row .gtask.c5{background:#12a594}
+.task-add{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.task-add input{padding:7px 10px;border:1px solid var(--bdr);border-radius:8px;font-family:inherit;font-size:12.5px;background:#fff;color:var(--text)}
+.task-add input[type=text]{flex:1;min-width:110px}
+.task-add button{padding:8px 15px;border:0;border-radius:8px;background:var(--pri);color:#fff;font-weight:700;cursor:pointer;font-size:12.5px;font-family:inherit}
+.week-nav{display:flex;align-items:center;gap:6px}
+.week-nav button{border:1px solid var(--bdr);background:#fff;border-radius:7px;padding:3px 9px;cursor:pointer;font-family:inherit;font-size:12px;color:var(--sub)}
+.week-nav button:hover{color:var(--pri);border-color:var(--pri)}
+/* 掌握分布 */
+.dist-item{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;padding:8px 0;border-bottom:1px dashed var(--bdr)}
+.dist-item:last-child{border-bottom:0}
+.dist-item .dv{font-weight:800;font-variant-numeric:tabular-nums}
+@media(max-width:860px){.dash-grid{grid-template-columns:1fr}}
+
+
 </style>
 </head>
 <body>
-<div class="hdr"><div class="wrap"><h1>⚙️ 计算机组成原理刷题本</h1><p>2027 王道考研 · 共 563 题 · 第1~7章</p></div></div>
+<div class="hdr"><div class="wrap"><h1>⚙️ 计算机组成原理刷题本</h1><p>2027 王道考研 · 共 604 题 · 第1~7章</p></div></div>
 <div class="nav" id="tabs">
-  <button class="tab on" data-tab="all">📖 全部题库</button>
+  <button class="tab on" data-tab="dash">📊 学习看板</button>
+  <button class="tab" data-tab="all">📖 全部题库</button>
   <button class="tab" data-tab="book">📌 我的错题本</button>
   <button class="tab" data-tab="chapter">📚 章节顺序刷题</button>
   <button class="tab" data-tab="random">🎲 随机刷题</button>
@@ -107,7 +174,49 @@ tr:hover td{background:#fafafa}
 </div>
 <div class="main"><div class="wrap">
 
-<div class="view on" id="v-all">
+<div class="view on" id="v-dash">
+  <div class="card dash-hero">
+    <div>
+      <div class="dh-hi" id="dh-hi">欢迎回来 👋</div>
+      <div class="dh-sub" id="dh-sub">正在加载学习数据…</div>
+    </div>
+    <div class="dh-badge" id="dh-badge">🔥 连续学习 0 天</div>
+  </div>
+  <div class="stat-row" id="dash-stats"></div>
+  <div class="dash-grid">
+    <div>
+      <div class="card">
+        <div class="dash-h3">📈 章节掌握进度 <span class="hint">按作答正确率自动归类</span></div>
+        <div id="dash-chap"></div>
+        <div class="dash-legend">
+          <span><b style="background:var(--succ)"></b>掌握（全对）</span>
+          <span><b style="background:var(--warn)"></b>不稳（错率≤50%）</span>
+          <span><b style="background:var(--dang)"></b>不会（错率&gt;50%）</span>
+          <span><b style="background:#eef0f3"></b>未作答</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="dash-h3">🗓 学习任务日历
+          <span class="week-nav"><button id="wk-prev">‹ 上周</button><button id="wk-today">本周</button><button id="wk-next">下周 ›</button></span>
+        </div>
+        <div id="dash-gantt"></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="dash-h3">🔥 近 8 周刷题热力 <span class="hint">颜色越深做题越多</span></div>
+        <div class="heat" id="dash-heat"></div>
+        <div class="heat-foot"><span>少</span><i></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i><span>多</span></div>
+      </div>
+      <div class="card">
+        <div class="dash-h3">🎯 本科掌握分布</div>
+        <div id="dash-dist"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="view" id="v-all">
   <div class="stat-row" id="stats-all"></div>
   <div class="tbar">
     <input type="text" id="search-all" placeholder="🔍 搜索题目..."><select id="filter-ch"></select><select id="filter-st"><option value="">全部状态</option><option value="never">未刷</option><option value="done">已刷</option><option value="wrong">刷错过</option><option value="book">错题本</option></select>
@@ -176,7 +285,7 @@ var tabs=document.querySelectorAll('.tab'),views=document.querySelectorAll('.vie
 tabs.forEach(function(t){t.addEventListener('click',function(){
   tabs.forEach(function(x){x.classList.remove('on')});views.forEach(function(x){x.classList.remove('on')});
   this.classList.add('on');var v=this.dataset.tab;document.getElementById('v-'+v).classList.add('on');
-  if(v==='all')RAL();else if(v==='book')RBK();else if(v==='chapter')RCS();else if(v==='random')SRD();else if(v==='exam')RES();
+  if(v==='all')RAL();else if(v==='book')RBK();else if(v==='chapter')RCS();else if(v==='random')SRD();else if(v==='exam')RES();else if(v==='dash')RDASH();
 })});
 
 var SKY='accuracy',SDI='asc',BSK='accuracy-b',BSD='asc',rOrd=[],rI=0,rCur=null,rTgt=null;
@@ -543,6 +652,191 @@ RAL();
   if(document.readyState!=='loading')init();else document.addEventListener('DOMContentLoaded',init);
 })();
 
+// ===== 📊 学习看板（新增模块，独立运行，不影响原有功能）=====
+function D2(n){return (n<10?'0':'')+n;}
+function DFMT(d){return d.getFullYear()+'-'+D2(d.getMonth()+1)+'-'+D2(d.getDate());}
+function DJ(k,def){try{var r=localStorage.getItem(k);return r?JSON.parse(r):def;}catch(e){return def;}}
+function DJset(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+function dLogKey(){return SK+'_log';}
+function dTaskKey(){return SK+'_tasks';}
+function dStat(){
+  var s=LS(),o={tot:QS.length,done:0,aSum:0,wSum:0,book:0,mas:0,mid:0,bad:0,none:0};
+  QS.forEach(function(q){
+    var r=s[q.id];
+    if(r&&r.b)o.book++;
+    if(r&&r.a>0){
+      o.done++;o.aSum+=r.a;o.wSum+=r.w;
+      var rate=r.w/r.a;
+      if(r.w===0)o.mas++;else if(rate<=0.5)o.mid++;else o.bad++;
+    }else o.none++;
+  });
+  o.acc=o.aSum?Math.round((o.aSum-o.wSum)/o.aSum*100):null;
+  o.pct=o.tot?Math.round(o.done/o.tot*100):0;
+  return o;
+}
+function dStreak(){
+  var L=DJ(dLogKey(),{}),n=0,d=new Date();
+  for(var i=0;i<400;i++){
+    var k=DFMT(d);
+    if(L[k]&&L[k].n>0){n++;d.setDate(d.getDate()-1);}else break;
+  }
+  return n;
+}
+function dDaysLeft(){return Math.ceil((new Date(2026,11,19,8,30,0)-new Date())/86400000);}
+function dChapHTML(){
+  var s=LS(),map={},ks;
+  QS.forEach(function(q){
+    var k=q.section||'未分类';
+    if(!map[k])map[k]={tot:0,mas:0,mid:0,bad:0};
+    map[k].tot++;
+    var r=s[q.id];
+    if(r&&r.a>0){var rate=r.w/r.a;if(r.w===0)map[k].mas++;else if(rate<=0.5)map[k].mid++;else map[k].bad++;}
+  });
+  ks=Object.keys(map);
+  if(!ks.length)return '<p style="color:var(--sub);font-size:12.5px">暂无章节数据</p>';
+  return ks.map(function(k){
+    var c=map[k],done=c.mas+c.mid+c.bad,p=function(v){return (v/c.tot*100)+'%';};
+    return '<div class="chp"><div class="chp-top"><span class="chp-name" title="'+h(k)+'">'+h(k)+'</span>'+
+      '<span class="chp-cnt">'+(done?('掌握 '+c.mas+' · 不稳 '+c.mid+' · 不会 '+c.bad):'未开始')+' ｜ '+done+'/'+c.tot+'</span></div>'+
+      '<div class="chp-bar">'+(c.mas?'<i class="mas" style="width:'+p(c.mas)+'"></i>':'')+
+      (c.mid?'<i class="mid" style="width:'+p(c.mid)+'"></i>':'')+
+      (c.bad?'<i class="bad" style="width:'+p(c.bad)+'"></i>':'')+'</div></div>';
+  }).join('');
+}
+function dHeatHTML(){
+  var L=DJ(dLogKey(),{}),today=new Date(),html='',i;
+  var start=new Date(today);start.setDate(start.getDate()-55);
+  for(i=0;i<56;i++){
+    var d=new Date(start);d.setDate(d.getDate()+i);
+    var k=DFMT(d),r=L[k]||{n:0,w:0};
+    var lv=r.n===0?0:(r.n<=3?1:(r.n<=10?2:(r.n<=25?3:4)));
+    html+='<i class="l'+lv+'" title="'+k+'：'+r.n+' 题 · 错 '+r.w+' 题"></i>';
+  }
+  return html;
+}
+var dWkOff=0;
+function dWeekStart(off){
+  var d=new Date();d.setHours(0,0,0,0);
+  var dow=(d.getDay()+6)%7;
+  d.setDate(d.getDate()-dow+off*7);
+  return d;
+}
+function dGanttHTML(){
+  var ws=dWeekStart(dWkOff),days=[],i;
+  for(i=0;i<7;i++){var d=new Date(ws);d.setDate(d.getDate()+i);days.push(d);}
+  var head='<div class="gantt-head">'+days.map(function(d,i2){
+    var isToday=DFMT(d)===DFMT(new Date());
+    return '<span'+(isToday?' style="color:var(--pri);font-weight:800"':'')+'>周'+['日','一','二','三','四','五','六'][d.getDay()]+'<br>'+(d.getMonth()+1)+'/'+d.getDate()+'</span>';
+  }).join('')+'</div>';
+  var tasks=DJ(dTaskKey(),[]);
+  var we=new Date(ws);we.setDate(we.getDate()+7);
+  var rows=tasks.filter(function(t){
+    var s=new Date(t.s+'T00:00:00'),e=new Date(t.e+'T00:00:00');
+    return e>=ws&&s<we;
+  }).map(function(t){
+    var s=new Date(t.s+'T00:00:00'),e=new Date(t.e+'T00:00:00');
+    var st=s<ws?ws:s,en=e>new Date(we-86400000)?new Date(we-86400000):e;
+    var c1=Math.round((st-ws)/86400000),c2=Math.round((en-ws)/86400000)+1;
+    var left=c1/7*100,width=(c2-c1)/7*100;
+    return '<div class="gantt-row"><div class="gtask c'+((t.c||1))+'" style="left:'+left+'%;width:calc('+width+'% - 6px)" data-tid="'+t.id+'" title="'+h(t.s)+' ~ '+h(t.e)+'（点击可删除）">'+h(t.name)+'</div></div>';
+  }).join('');
+  var add='<div class="task-add"><input type="text" id="tk-name" placeholder="添加任务，如：数学二轮刷题">'+
+    '<input type="date" id="tk-s" value="'+DFMT(ws)+'"><input type="date" id="tk-e" value="'+DFMT(new Date(we-86400000))+'">'+
+    '<button onclick="dAddTask()">+ 添加任务</button></div>';
+  return head+(rows||'<div style="color:var(--sub);font-size:12.5px;padding:2px 0 8px">本周暂无任务，在下方添加 👇</div>')+add;
+}
+function dAddTask(){
+  var n=document.getElementById('tk-name'),s=document.getElementById('tk-s'),e=document.getElementById('tk-e');
+  var name=(n&&n.value||'').trim();
+  if(!name){toast('请输入任务名称');return;}
+  var tasks=DJ(dTaskKey(),[]);
+  var ws=dWeekStart(dWkOff),we=new Date(ws);we.setDate(we.getDate()+6);
+  var sv=(s&&s.value)||DFMT(ws),ev=(e&&e.value)||DFMT(we);
+  if(ev<sv)ev=sv;
+  tasks.push({id:'t'+Date.now(),name:name,s:sv,e:ev,c:(tasks.length%5)+1});
+  DJset(dTaskKey(),tasks);
+  if(n)n.value='';
+  RDASH();toast('已添加任务');
+}
+function dDelTask(id){
+  var tasks=DJ(dTaskKey(),[]).filter(function(t){return t.id!==id;});
+  DJset(dTaskKey(),tasks);RDASH();toast('已删除任务');
+}
+function dBindTask(){
+  var box=document.getElementById('dash-gantt');
+  if(box&&!box.__bound){
+    box.__bound=1;
+    box.addEventListener('click',function(ev){
+      var t=ev.target,el=null;
+      while(t&&t!==box){if(t.classList&&t.classList.contains('gtask')){el=t;break;}t=t.parentNode;}
+      if(el&&el.dataset.tid&&confirm('删除任务「'+el.textContent+'」？'))dDelTask(el.dataset.tid);
+    });
+  }
+  var p=document.getElementById('wk-prev');if(p)p.onclick=function(){dWkOff--;RDASH();};
+  var nx=document.getElementById('wk-next');if(nx)nx.onclick=function(){dWkOff++;RDASH();};
+  var td=document.getElementById('wk-today');if(td)td.onclick=function(){dWkOff=0;RDASH();};
+}
+function RDASH(){
+  try{
+    var o=dStat(),sl=dDaysLeft(),st=dStreak();
+    var hi=document.getElementById('dh-hi'),sub=document.getElementById('dh-sub'),bd=document.getElementById('dh-badge');
+    if(hi)hi.textContent='欢迎回来 👋';
+    if(sub){
+      var now=new Date();
+      sub.textContent='今天是 '+now.getFullYear()+' 年 '+(now.getMonth()+1)+' 月 '+now.getDate()+' 日 星期'+
+        ['日','一','二','三','四','五','六'][now.getDay()]+
+        (sl>0?(' ｜ 距 2026.12.19 初试还有 '+sl+' 天'):' ｜ 考试已开始，稳住！');
+    }
+    if(bd)bd.textContent='🔥 连续学习 '+st+' 天';
+    var sb=document.getElementById('dash-stats');
+    if(sb){
+      var cards=[
+        ['已刷题数',o.done+' <em style="font-size:13px;font-style:normal;color:var(--sub)">/ '+o.tot+'</em>','完成度 '+o.pct+'%','var(--pri)'],
+        ['平均正确率',(o.acc===null?'—':o.acc+'%'),'基于 '+o.aSum+' 次作答','var(--succ)'],
+        ['错题本',o.book+' 题','可在「我的错题本」查看','var(--warn)'],
+        ['累计错题',o.wSum+' 次','掌握 '+o.mas+' 题 ｜ 未答 '+o.none+' 题','var(--dang)']
+      ];
+      sb.innerHTML=cards.map(function(x){
+        return '<div class="card" style="margin:0;padding:16px 18px"><div style="font-size:11.5px;color:var(--sub);font-weight:600">'+x[0]+'</div>'+
+          '<div style="font-size:25px;font-weight:800;margin-top:2px;color:'+x[3]+'">'+x[1]+'</div>'+
+          '<div style="font-size:11px;color:var(--sub);margin-top:2px">'+x[2]+'</div></div>';
+      }).join('');
+    }
+    var ch=document.getElementById('dash-chap');if(ch)ch.innerHTML=dChapHTML();
+    var he=document.getElementById('dash-heat');if(he)he.innerHTML=dHeatHTML();
+    var ga=document.getElementById('dash-gantt');if(ga)ga.innerHTML=dGanttHTML();
+    var di=document.getElementById('dash-dist');
+    if(di){
+      var tot=o.tot||1;
+      di.innerHTML=[['✅ 掌握','mas',o.mas,'var(--succ)'],['🟡 不稳','mid',o.mid,'var(--warn)'],['🔴 不会','bad',o.bad,'var(--dang)'],['⚪ 未作答','none',o.none,'#c7c7cc']]
+        .map(function(x){
+          var pc=Math.round(x[2]/tot*100);
+          return '<div class="dist-item"><span>'+x[0]+'</span><span><b class="dv" style="color:'+x[3]+'">'+x[2]+'</b> <span style="color:var(--sub);font-size:11px">'+pc+'%</span></span></div>';
+        }).join('');
+    }
+    dBindTask();
+  }catch(e){if(window.console)console.log('RDASH:',e);}
+}
+// 记录每日刷题活动（包装 REC，原逻辑不变）
+(function(){
+  if(window.__DASH_LOG__)return;window.__DASH_LOG__=true;
+  if(typeof REC!=='function')return;
+  var _rec=REC;
+  window.REC=function(id,ok){
+    _rec(id,ok);
+    try{
+      var key=SK+'_log',L=DJ(key,{}),k=DFMT(new Date());
+      if(!L[k])L[k]={n:0,w:0};
+      L[k].n++;if(!ok)L[k].w++;
+      var ks=Object.keys(L);
+      if(ks.length>150){ks.sort();while(ks.length>150){delete L[ks.shift()];}}
+      DJset(key,L);
+    }catch(e){}
+  };
+})();
+window.RDASH=RDASH;window.dAddTask=dAddTask;window.dDelTask=dDelTask;
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){setTimeout(RDASH,0);});}
+else{setTimeout(RDASH,0);}
 </script>
 
 <div id="gset" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999;background:#fff;color:#333;border-radius:14px;padding:22px 26px;width:400px;max-width:92vw;box-shadow:0 14px 44px rgba(0,0,0,.4);font:14px/1.7 -apple-system,'PingFang SC','Microsoft YaHei',sans-serif;">
