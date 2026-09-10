@@ -1683,7 +1683,7 @@ html[data-theme="dark"] .shelf-board{background:linear-gradient(180deg,#4A2038,#
 
     <footer class="foot">
       <b>百日研途</b> · 数据以 AES-256 加密存储，仅在本机浏览器内解密<br>
-      每一小时都算数 —— <span class="heart">♡</span> 愿你得偿所愿，上岸见。
+      <span v-if="meta.updated_at">数据更新于 {{ meta.updated_at }} · </span>每一小时都算数 —— <span class="heart">♡</span> 愿你得偿所愿，上岸见。
     </footer>
 
   </template>
@@ -2102,7 +2102,8 @@ function bootApp() {
       async loadEnc() {
         this.gateEmpty = false; this.ready = false;
         try {
-          const res = await fetch('./data.enc', { cache: 'no-store' });
+          // 加时间戳：GitHub Pages 的 CDN 会缓存 10 分钟，带参数可立即拿到最新数据
+          const res = await fetch('./data.enc?t=' + Date.now(), { cache: 'no-store' });
           if (!res.ok) throw new Error('missing');
           const txt = (await res.text()).trim();
           if (!txt || /^</.test(txt)) throw new Error('missing');   // GitHub Pages 的 404 HTML
@@ -2416,7 +2417,7 @@ function bootApp() {
         this.pdfError = '';
         this.revokePdfUrl();
         try {
-          const res = await fetch(n.enc, { cache: 'no-store' });
+          const res = await fetch(n.enc + '?t=' + Date.now(), { cache: 'no-store' });
           if (!res.ok) throw new Error('找不到加密文件 ' + n.enc + '，请确认已执行 update.py 并推送');
           const bytes = this.decryptBinary(await res.arrayBuffer());
           if (!this.activeNote || this.activeNote.id !== n.id) return;   // 期间用户已切走

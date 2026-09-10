@@ -337,6 +337,9 @@ def upsert_milestone(data: dict, patch: dict) -> str:
 
 
 def do_encrypt(data: dict, password: str) -> None:
+    # 写入数据版本时间（只进密文，不回写 data.json），前端页脚会显示"数据更新于 …"，
+    # 便于确认浏览器拿到的是不是最新一份
+    data.setdefault("meta", {})["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
     raw = json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8")
     DATA_ENC.write_text(encrypt_text(raw, password), encoding="utf-8")
     kb = DATA_ENC.stat().st_size / 1024
