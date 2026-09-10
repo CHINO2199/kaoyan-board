@@ -613,6 +613,10 @@ html[data-theme="light"] ::-webkit-calendar-picker-indicator{filter:none}
 .donut-center b{display:block;font-size:34px;font-weight:830;letter-spacing:-.04em;font-variant-numeric:tabular-nums;line-height:1}
 .donut-center b small{font-size:15px;color:var(--tx-3);font-weight:600;margin-left:2px}
 .donut-center span{display:block;font-size:10.5px;color:var(--tx-3);letter-spacing:.2em;margin-top:7px}
+.donut-empty{
+  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:9px;color:var(--tx-3);font-size:12.5px;text-align:center;line-height:1.7;
+}
 
 .subj-legend{display:flex;flex-direction:column;gap:9px;margin-top:16px}
 .sl-row{display:flex;align-items:center;gap:10px;font-size:12.5px}
@@ -620,6 +624,14 @@ html[data-theme="light"] ::-webkit-calendar-picker-indicator{filter:none}
 .sl-row .nm{flex:1;color:var(--tx-2)}
 .sl-row .hr{font-weight:700;font-variant-numeric:tabular-nums}
 .sl-row .pc{width:44px;text-align:right;color:var(--tx-3);font-size:11.5px;font-variant-numeric:tabular-nums}
+
+/* 墨墨背单词卡片 */
+.memo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.memo-cell .k{font-size:11.5px;color:var(--tx-3);margin-bottom:9px;letter-spacing:.02em}
+.memo-cell .v{font-size:25px;font-weight:820;letter-spacing:-.035em;font-variant-numeric:tabular-nums;line-height:1}
+.memo-cell .v small{font-size:13px;font-weight:600;color:var(--tx-3);margin-left:3px;letter-spacing:0}
+.memo-cell .sub{font-size:11.5px;color:var(--tx-3);margin-top:9px;line-height:1.65}
+.memo-cell .bar{margin-top:11px}
 
 /* 分时段时间轴 */
 .tl{position:relative;padding-left:24px}
@@ -914,6 +926,7 @@ html[data-theme="dark"] .shelf-board{background:linear-gradient(180deg,#4A2038,#
   .subjects{margin-top:34px}
   .reader{padding:0 16px}
   .reader-title{font-size:15.5px}
+  .memo-grid{grid-template-columns:repeat(2,1fr);gap:14px}
   .shelf-lane{min-height:322px;padding-left:6px;padding-right:6px}
 }
 @media (prefers-reduced-motion:reduce){
@@ -1391,6 +1404,43 @@ html[data-theme="dark"] .shelf-board{background:linear-gradient(180deg,#4A2038,#
           </div>
 
           <template v-if="dayLog">
+            <!-- 墨墨背单词 · 今日复习（由 update.py --memo 自动写入） -->
+            <div class="card card-pad" v-if="dayLog.memo" style="margin-bottom:16px">
+              <div class="sec-head" style="margin-bottom:16px">
+                <div class="card-title"><span class="dot"></span>墨墨背单词 · 今日复习</div>
+                <div class="card-sub">开放 API 同步 · {{ dayLog.memo.checked_at }}</div>
+              </div>
+              <div class="memo-grid">
+                <div class="memo-cell">
+                  <div class="k">今日进度</div>
+                  <div class="v num">{{ dayLog.memo.finished }}<small>/ {{ dayLog.memo.total }} 词</small></div>
+                  <div class="bar"><i :style="{width:memoPct+'%'}"></i></div>
+                </div>
+                <div class="memo-cell">
+                  <div class="k">学习时长</div>
+                  <div class="v num">{{ dayLog.memo.study_minutes }}<small>分钟</small></div>
+                  <div class="sub">今日新词 {{ dayLog.memo.new_words || 0 }} 个</div>
+                </div>
+                <div class="memo-cell">
+                  <div class="k">首答遗忘</div>
+                  <div class="v num" :style="{color: (dayLog.memo.forgotten_count||0) > 0 ? 'var(--rose)' : 'var(--teal)'}">
+                    {{ dayLog.memo.forgotten_count || 0 }}<small>词</small>
+                  </div>
+                  <div class="sub" v-if="(dayLog.memo.forgotten_sample||[]).length">
+                    {{ (dayLog.memo.forgotten_sample||[]).slice(0,5).join('、') }}
+                  </div>
+                  <div class="sub" v-else>全部一遍过 ✓</div>
+                </div>
+                <div class="memo-cell">
+                  <div class="k">计划总量</div>
+                  <div class="v num">{{ dayLog.memo.plan_total || 0 }}<small>词</small></div>
+                  <div class="sub" :style="{color: (dayLog.memo.remaining||0) > 0 ? 'var(--amber)' : 'var(--teal)'}">
+                    {{ (dayLog.memo.remaining||0) > 0 ? '还剩 ' + dayLog.memo.remaining + ' 词未复习' : '今日已全部完成 ✓' }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div class="g g-2u" style="margin-bottom:16px">
               <div class="card card-pad">
                 <div class="sec-head" style="margin-bottom:6px">
@@ -1398,10 +1448,17 @@ html[data-theme="dark"] .shelf-board{background:linear-gradient(180deg,#4A2038,#
                   <div class="card-sub">{{ viewDate }}</div>
                 </div>
                 <div class="donut-wrap">
-                  <div id="donut"></div>
-                  <div class="donut-center">
+                  <div id="donut" v-show="hasSubjectData"></div>
+                  <div class="donut-center" v-show="hasSubjectData">
                     <b class="num">{{ dayLog.total_hours }}<small>h</small></b>
                     <span>今日总时长</span>
+                  </div>
+                  <div class="donut-empty" v-if="!hasSubjectData">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.5">
+                      <circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l4 2"/>
+                    </svg>
+                    <span>今天还没有分科时长记录</span>
+                    <span style="color:var(--tx-3);opacity:.75">把学习时长告诉 Agent，圆盘就会亮起来</span>
                   </div>
                 </div>
                 <div class="subj-legend">
@@ -1905,8 +1962,8 @@ function bootApp() {
       avgHours() { return this.logs.length ? Math.round(this.totalHours / this.logs.length * 10) / 10 : 0; },
       lastLogDate() { return this.logs.length ? this.logs[this.logs.length - 1].date : ''; },
       doneMs() { return this.milestones.filter(m => m.status === 'done').length; },
-      ongoingMs() { return this.milestones.filter(m => m.status === 'ongoing' || (m.progress > 0 && m.status !== 'done')).length; },
-      pendingMs() { return this.milestones.filter(m => !m.progress && m.status !== 'done').length; },
+      ongoingMs() { return this.milestones.filter(m => m.status === 'ongoing').length; },
+      pendingMs() { return this.milestones.filter(m => m.status === 'pending').length; },
       streak() {
         if (!this.logs.length) return 0;
         const set = new Set(this.logs.map(l => l.date));
@@ -1972,6 +2029,15 @@ function bootApp() {
         const out = {};
         Object.entries(sh).sort((a, b) => b[1] - a[1]).forEach(([k, v]) => { out[k] = v; });
         return out;
+      },
+      memoPct() {
+        const m = this.dayLog && this.dayLog.memo;
+        if (!m || !m.total) return 0;
+        return Math.max(0, Math.min(100, Math.round(m.finished / m.total * 100)));
+      },
+      hasSubjectData() {
+        const sh = (this.dayLog && this.dayLog.subject_hours) || {};
+        return Object.values(sh).some(v => Number(v) > 0);
       },
 
       /* ---- 笔记 ---- */
@@ -2253,6 +2319,10 @@ function bootApp() {
       initDonut() {
         const el = document.getElementById('donut');
         if (!el || !window.echarts || !this.dayLog) return;
+        if (!this.hasSubjectData) {                    // 无数据时不画灰环
+          if (this.donut) { this.donut.dispose(); this.donut = null; }
+          return;
+        }
         if (this.donut) { this.donut.dispose(); this.donut = null; }
         const w = el.clientWidth, h = el.clientHeight;
         if (!w || !h) return;

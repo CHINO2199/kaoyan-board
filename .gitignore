@@ -3,6 +3,7 @@ data.json
 notes_src/
 ds-1.md
 .kaoyan_key
+.memo_token
 
 # ---- 设计参考图（无需部署到 Pages）----
 *参考.png

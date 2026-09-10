@@ -357,6 +357,48 @@ def do_push(message: str) -> None:
         sys.exit(1)
 
 
+def fetch_memo():
+    """调用 tools/memo.py 抓取墨墨背单词今日复习情况"""
+    script = ROOT / "tools" / "memo.py"
+    if not script.exists():
+        print("  ! 未找到 tools/memo.py，跳过墨墨数据")
+        return None
+    try:
+        r = subprocess.run([sys.executable, str(script), "--json"],
+                           capture_output=True, text=True, encoding="utf-8", timeout=150)
+        if r.returncode != 0:
+            msg = (r.stdout or r.stderr or "").strip().replace("\n", " ")[:140]
+            print("  ! 墨墨数据获取失败：%s" % msg)
+            return None
+        memo = json.loads(r.stdout)
+        if memo.get("error"):
+            print("  ! 墨墨数据获取失败：%s" % memo["error"])
+            return None
+        return memo
+    except Exception as e:
+        print("  ! 墨墨数据获取异常：%s" % e)
+        return None
+
+
+def attach_memo(data: dict, memo: dict, day=None) -> None:
+    """把墨墨复习数据挂到当天记录；当天还没有记录时自动创建一条骨架"""
+    day = day or memo.get("date") or date.today().isoformat()
+    logs = data.setdefault("daily_logs", [])
+    for item in logs:
+        if item.get("date") == day:
+            item["memo"] = memo
+            print("  · 已写入 %s 的墨墨数据（%d/%d 词，%.1f 分钟）"
+                  % (day, memo.get("finished", 0), memo.get("total", 0), memo.get("study_minutes", 0)))
+            return
+    logs.append({
+        "date": day, "total_hours": 0, "subject_hours": {},
+        "time_segments": [], "completed_tasks": [],
+        "reflection": "", "tomorrow_plan": [], "memo": memo,
+    })
+    logs.sort(key=lambda x: x.get("date", ""))
+    print("  + %s 暂无学习记录，已创建骨架并写入墨墨数据" % day)
+
+
 def do_verify(password: str) -> None:
     if not DATA_ENC.exists():
         print("× data.enc 不存在")
@@ -388,6 +430,8 @@ def main() -> None:
     ap.add_argument("--encrypt-only", action="store_true", help="仅重新加密，不做同步")
     ap.add_argument("--verify", action="store_true", help="解密 data.enc 并打印摘要")
     ap.add_argument("--push", action="store_true", help="提交并推送到 GitHub")
+    ap.add_argument("--memo", action="store_true",
+                    help="抓取墨墨背单词今日复习情况，写入当天记录（每晚推送前建议加上）")
     ap.add_argument("--key", help="临时指定主密码（也可用环境变量 KAOYAN_KEY 或 .kaoyan_key 文件）")
     ap.add_argument("--today", help="覆盖“今天”的日期（YYYY-MM-DD），便于补录")
     args = ap.parse_args()
@@ -415,6 +459,11 @@ def main() -> None:
     if args.milestone:
         upsert_milestone(data, load_arg_json(args.milestone))
         touched = True
+    if args.memo:
+        memo = fetch_memo()
+        if memo:
+            attach_memo(data, memo, today)
+            touched = True
 
     if not args.encrypt_only:
         n = sync_notes(data, today, password)

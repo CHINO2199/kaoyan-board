@@ -31,6 +31,7 @@
 ├── notes_src/          # 笔记源文件：*.md 与 *.pdf（明文，已被排除）
 ├── notes_enc/          # ★ PDF 的加密产物 *.enc（随仓库发布，前端按需拉取解密）
 ├── tools/
+│   ├── memo.py           # 墨墨背单词今日复习情况查询（update.py --memo 调用它）
 │   └── verify_crypto.js  # 跨端加密一致性自检脚本
 ├── preview/            # 各页面效果截图
 ├── README.md
@@ -138,6 +139,9 @@ Agent 会把它结构化成：
 # 追加当天记录（可直接传 JSON 文件）
 python update.py --daily @day.json --push
 
+# 每晚推荐的一条：写当天记录 + 抓墨墨复习情况 + 加密 + 推送
+python update.py --daily @day.json --memo --push
+
 # 顺手更新里程碑
 python update.py --milestone '{"id":"m3","progress":70}'
 
@@ -181,6 +185,40 @@ notes_src/x.pdf  ──AES-256-CBC──►  notes_enc/x.enc（二进制：IV[16
 
 > 想用 PDF.js 自绘也可以，但需要处理 worker 与主线程模块实例不一致的问题；
 > 内置阅读器方案在可靠性和体积上都更划算。
+
+### 5. 每晚检查单词复习（墨墨背单词）
+
+已接入 [墨墨开放 API](https://github.com/maimemo/memo-skills)（skill `memo-api`），
+**推送当天进度前顺手抓一次复习情况**，写进当天记录并在「每日看板」顶部以卡片呈现：
+
+```bash
+python update.py --memo                  # 抓取并写入当天记录
+python update.py --memo --push           # 抓取 + 加密 + 推送（推荐每晚这一条）
+python tools/memo.py                     # 只在终端看一眼，不写数据
+```
+
+Token 配置（二选一）：
+
+- 环境变量 `MAIMEMO_TOKEN`（推荐）
+- 项目根目录的 `.memo_token` 文件（已被 `.gitignore` 排除）
+
+获取 Token：墨墨 App → 开放 API；或网页登录
+<https://open.maimemo.com/open/api/v1/tokens/openapi> 复制。**网页来源的 Token 有效期 7 天**，
+过期后 `tools/memo.py` 会报鉴权失败，重新走一次获取流程即可。
+
+抓取到的内容写入当天记录的 `memo` 字段：
+
+| 字段 | 含义 |
+| --- | --- |
+| `finished` / `total` | 今日已复习 / 目标词数（驱动卡片上的进度条） |
+| `study_minutes` | 今日学习时长（分钟） |
+| `new_words` | 今日新词数 |
+| `forgotten_count` / `forgotten_sample` | 首答「忘记」的词数与示例 |
+| `plan_total` | 学习计划中的总词数 |
+| `remaining` | 还剩多少词没复习（>0 时卡片显示琥珀色提醒） |
+
+> 墨墨学习数据接口目前是 **Beta**，且需在 App 内开启「自动同步」；
+> 若当天没打开过 App 初始化，统计可能不准。抓取失败不会阻断加密与推送，只是当天没有卡片。
 
 ---
 
