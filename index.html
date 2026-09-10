@@ -2114,7 +2114,9 @@ function bootApp() {
         const [y, m, d] = String(this.meta.exam_date || '2026-12-19').split('-').map(Number);
         return new Date(y, (m || 12) - 1, d || 19, 8, 30, 0).getTime();
       },
-      dayNo() { return Math.max(0, Math.ceil((this.examTime - this.now) / 86400000)); },
+      /* 剩余整天数：向下取整，与「时/分/秒」保持同一口径
+         （距开考 99 天 11 小时 → 显示 99 天，而不是凑成 100 天） */
+      dayNo() { return Math.max(0, Math.floor((this.examTime - this.now) / 86400000)); },
       sprintPct() {
         const total = this.meta.total_days || 100;
         return Math.max(0, Math.min(100, Math.round((total - this.dayNo) / total * 100)));
@@ -2451,8 +2453,9 @@ function bootApp() {
         this.now = Date.now();
         const s = Math.max(0, Math.floor((this.examTime - this.now) / 1000));
         this.cd = {
-          // 与 dayNo 口径一致（向上取整），避免出现"倒数第 100 天却显示 99"
-          d: Math.max(0, Math.ceil((this.examTime - this.now) / 86400000)),
+          // 与 dayNo 口径一致（向下取整）：99 天 11 时 → 99 天 + 11 时，
+          // 不会出现「100 天 11 小时」这种自相矛盾的读数
+          d: Math.max(0, Math.floor((this.examTime - this.now) / 86400000)),
           h: Math.floor(s / 3600) % 24,
           m: Math.floor(s / 60) % 60,
           s: s % 60
