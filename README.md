@@ -31,8 +31,11 @@
 ├── notes_src/          # 笔记源文件：*.md 与 *.pdf（明文，已被排除）
 ├── notes_enc/          # ★ PDF 的加密产物 *.enc（随仓库发布，前端按需拉取解密）
 ├── tools/
-│   ├── memo.py           # 墨墨背单词今日复习情况查询（update.py --memo 调用它）
+│   ├── memo.py           # 墨墨今日复习情况查询（update.py --memo 调用它）
+│   ├── memo_sync.py      # 自动同步：解密 data.enc → 抓墨墨 → 写回（供 Actions 调用）
 │   └── verify_crypto.js  # 跨端加密一致性自检脚本
+├── .github/workflows/
+│   └── memo-sync.yml     # ★ 每 4 小时 + 凌晨 02:30 自动同步墨墨进度
 ├── preview/            # 各页面效果截图
 ├── README.md
 └── .gitignore
@@ -219,6 +222,37 @@ Token 配置（二选一）：
 
 > 墨墨学习数据接口目前是 **Beta**，且需在 App 内开启「自动同步」；
 > 若当天没打开过 App 初始化，统计可能不准。抓取失败不会阻断加密与推送，只是当天没有卡片。
+
+### 6. 全自动同步（GitHub Actions）
+
+不想手动跑脚本也行 —— 仓库里已经配好定时任务，**每 4 小时 + 每天凌晨 02:30（北京时间）**
+自动抓取墨墨进度、加密并提交，完全不需要你的电脑开机。
+
+启用只需一次性配置两个 Secrets：
+
+仓库 → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**
+
+| Name | Value |
+| --- | --- |
+| `KAOYAN_KEY` | 你的主密码（用于解密 / 重新加密 `data.enc`） |
+| `MAIMEMO_TOKEN` | 墨墨开放 API Token |
+
+配置完成后到 **Actions** 标签页，选「墨墨进度自动同步」，点 **Run workflow** 手动跑一次验证。
+
+**调度时间（北京时间）**：`00:00 · 04:00 · 08:00 · 12:00 · 16:00 · 20:00` + `02:30`
+
+工作原理（`tools/memo_sync.py`）：
+
+```
+data.enc --解密--> 抓墨墨进度 --> 写入当天记录 --> 重新加密 --> 提交 data.enc
+```
+
+- **不依赖 `data.json`** —— 以 `data.enc` 为唯一数据源，明文永远不进 CI
+- 数据无变化时直接退出，**不产生空提交**
+- 用了 `[skip ci]` 与 `concurrency` 防止重复触发和并发冲突
+
+> GitHub 的定时任务在高峰期可能延迟几分钟到十几分钟，属正常现象（02:30 那班留了 1 小时余量）。
+> cron 只能写 UTC，workflow 里已换算好。若发现 Actions 被禁用，去 Actions 页点一次 Enable 即可。
 
 ---
 
