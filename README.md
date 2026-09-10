@@ -197,19 +197,71 @@ notes_src/x.pdf  ──AES-256-CBC──►  notes_enc/x.enc（二进制：IV[16
 
 ## 七、部署到 GitHub Pages
 
+### 第 1 步：在 GitHub 上建一个**空**仓库
+
+浏览器打开 <https://github.com/new>：
+
+| 字段 | 填什么 |
+| --- | --- |
+| Repository name | 例如 `kaoyan-board`（随便取，会出现在网址里） |
+| Description | 随意，可留空 |
+| Public / Private | 选 **Public**（免费账号开 Pages 必须是公开仓库；数据已加密，公开也安全） |
+
+⚠️ **下面的「Add a README file」「Add .gitignore」「Choose a license」一个都不要勾**，
+否则远程仓库已有提交，本地推送会因历史不一致而失败。
+
+点 **Create repository**，然后复制页面上的仓库地址，形如：
+
+```
+https://github.com/你的用户名/kaoyan-board.git
+```
+
+### 第 2 步：本地推送
+
+本项目已经把仓库初始化好并完成了首次提交（`main` 分支，12 个文件），你只需要两条命令：
+
 ```bash
-git init
-git add index.html data.enc data.sample.json update.py tools README.md .gitignore
-git commit -m "init: 百日研途看板"
-git remote add origin git@github.com:<你的账号>/<仓库名>.git
+cd "C:\Users\33270\Desktop\ky\每日工作"
+git remote add origin https://github.com/你的用户名/kaoyan-board.git
 git push -u origin main
 ```
 
-然后在仓库 **Settings → Pages** 里选择 `Deploy from a branch` → `main` / `root`，稍等片刻即可访问
-`https://<你的账号>.github.io/<仓库名>/`。
+第一次推送会弹出 **Git Credential Manager** 登录窗口，按提示在浏览器里点授权即可 ——
+**不需要手打密码或 token**，凭据会安全地存在 Windows 凭据管理器里，以后推送不再询问。
 
-> 私有仓库的 Pages 需要 GitHub Pro；公开仓库则意味着 `index.html` 和 `data.enc` 对所有人可见 ——
-> 这正是加密存在的意义：**别人能拿到密文，但没有密码就什么也看不到。**
+### 第 3 步：打开 Pages
+
+仓库页 → **Settings** → 左侧菜单 **Pages**：
+
+- **Source** 选 `Deploy from a branch`
+- **Branch** 选 `main`，目录选 `/ (root)`
+- 点 **Save**
+
+等 1～2 分钟（可以刷新 Pages 页面看状态变成绿色的 ✓），然后访问：
+
+```
+https://你的用户名.github.io/kaoyan-board/
+```
+
+输入主密码即可。**示范密码是 `kaoyan2027`，请务必先换成你自己的再推送**（见第四节）。
+
+### 第 4 步：以后每次更新
+
+```bash
+python update.py --daily @day.json --push
+```
+
+`--push` 会自动执行 `git add data.enc index.html` → `commit` → `push`，
+Pages 约 1 分钟后生效，手机上刷新就能看到当天记录。
+
+> 💡 更新 `data.enc` 后浏览器可能缓存旧文件。前端已用 `cache: 'no-store'` 规避，
+> 若仍看到旧数据，按 `Ctrl + F5` 强制刷新一次。
+
+---
+
+**关于隐私**：公开仓库意味着任何人都能下载 `index.html` 和 `data.enc`。
+但 `data.enc` 是 AES-256-CBC 密文，没有主密码就是一串随机字符 ——
+这正是本项目加密设计的全部意义：**内容可以挂在公网，却只有你能看懂。**
 
 ---
 
