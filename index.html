@@ -556,6 +556,14 @@ html[data-theme="light"] .gt-plan .lbl{text-shadow:none}
   background:linear-gradient(90deg,var(--blue-d),var(--blue));
   box-shadow:0 4px 14px -5px rgba(59,130,246,.9);
 }
+/* 按天着色：蓝=已完成当天进度；红=当天没做；黄=超出计划后补做 */
+.gt-real.k-done{background:linear-gradient(90deg,var(--blue-d),var(--blue));box-shadow:0 4px 14px -5px rgba(59,130,246,.9)}
+.gt-real.k-miss{background:linear-gradient(90deg,#dc2626,#f87171);box-shadow:0 4px 14px -5px rgba(239,68,68,.85)}
+.gt-real.k-ext{background:linear-gradient(90deg,#d97706,#fbbf24);box-shadow:0 4px 14px -5px rgba(251,191,36,.85)}
+.gt-real.k-todo{
+  background:repeating-linear-gradient(45deg,rgba(148,163,184,.55),rgba(148,163,184,.55) 4px,transparent 4px,transparent 9px);
+  border:1px dashed var(--bd-2);box-shadow:none;
+}
 .gt-real.pending{
   background:repeating-linear-gradient(45deg,var(--bd-2),var(--bd-2) 5px,transparent 5px,transparent 10px);
   border:1px dashed var(--bd-2);box-shadow:none;
@@ -1258,8 +1266,10 @@ html[data-theme="dark"] .shelf-board{background:linear-gradient(180deg,#4A2038,#
               <div class="sec-desc">全周期计划 · 实际执行对比 · 学习强度分布</div>
             </div>
             <div class="legend">
-              <b><i class="lg-plan"></i>预计工期</b>
-              <b><i class="lg-real"></i>实际完成</b>
+              <b><i class="lg-plan"></i>计划工期</b>
+              <b><i class="lg-real"></i>当日已完成</b>
+              <b><i class="lg-miss"></i>当日没做</b>
+              <b><i class="lg-ext"></i>超出计划补做</b>
               <b><i class="lg-today"></i>今天</b>
             </div>
           </div>
@@ -1325,7 +1335,7 @@ html[data-theme="dark"] .shelf-board{background:linear-gradient(180deg,#4A2038,#
               <div>
                 <div class="card-title"><span class="dot"></span>标准工作日历</div>
                 <div class="card-sub" style="margin-top:6px">
-                  紫色虚线为计划工期，蓝色实心为实际投入 · 悬停查看明细
+                  紫虚线 = 计划工期（不随延期拉长）· 蓝 = 当日按计划完成 · 红 = 当日没做 · 黄 = 超出计划后补做 · 悬停看明细
                 </div>
               </div>
               <div class="gantt-tools">
@@ -1360,42 +1370,45 @@ html[data-theme="dark"] .shelf-board{background:linear-gradient(180deg,#4A2038,#
                   </div>
                 </div>
 
-                <!-- 任务行 -->
-                <div v-for="ms in milestones" :key="ms.id" class="gt-row">
+                <!-- 任务行（同一行的多个任务块：m.row 指向同一 id 即合并为一行） -->
+                <div v-for="row in ganttRows" :key="row.key" class="gt-row">
                   <div class="gt-name">
-                    <div class="t" :title="ms.title">
-                      <span class="breath-static" :style="{background:subjColor(ms.subject)}"></span>
-                      {{ ms.title }}
+                    <div class="t" :title="row.main.title">
+                      <span class="breath-static" :style="{background:subjColor(row.main.subject)}"></span>
+                      {{ row.main.title }}
                     </div>
                     <div class="s">
-                      <span>{{ ms.subject }}</span>
+                      <span>{{ row.main.subject }}</span>
                       <span>·</span>
-                      <span v-if="ms.status==='done'">已完成</span>
-                      <span v-else-if="ms.status==='ongoing'">进行中<span v-if="ms.progress>0"> · {{ ms.progress }}%</span></span>
+                      <span v-if="row.main.status==='done'">已完成</span>
+                      <span v-else-if="row.main.status==='ongoing'">进行中<span v-if="row.main.progress>0"> · {{ row.main.progress }}%</span></span>
                       <span v-else>未启动</span>
+                      <span v-if="row.blocks.length>1">· {{ row.blocks.length }} 个区间</span>
                     </div>
                   </div>
 
                   <div class="gt-track">
-                    <div v-for="d in days" :key="ms.id+d.iso" class="gt-cell" :class="{weekend:d.we}"></div>
+                    <div v-for="d in days" :key="row.key+d.iso" class="gt-cell" :class="{weekend:d.we}"></div>
 
                     <!-- 今天竖线 -->
                     <div v-if="todayOffset>=0" class="gt-today-line" :style="{left:(todayOffset*36)+'px'}"></div>
 
-                    <!-- 预计工期（紫） -->
-                    <div v-if="barOf(ms,'plan')" class="gt-bar gt-plan"
-                         :style="barOf(ms,'plan').style"
-                         @mouseenter="showTip($event, ms, 'plan')" @mouseleave="hideTip">
-                      <span class="fill" :style="{width:ms.progress+'%'}"></span>
-                      <span class="lbl">{{ ms.title }}</span>
-                    </div>
+                    <template v-for="b in row.blocks" :key="'blk'+b.id">
+                      <!-- 计划工期（紫虚线，固定不延长） -->
+                      <div v-if="barOf(b,'plan')" class="gt-bar gt-plan"
+                           :style="barOf(b,'plan').style"
+                           @mouseenter="showTip($event, b, 'plan')" @mouseleave="hideTip">
+                        <span class="fill" :style="{width:(b.progress||0)+'%'}"></span>
+                        <span class="lbl">{{ b.range || b.title }}</span>
+                      </div>
 
-                    <!-- 实际完成（蓝） -->
-                    <div class="gt-bar gt-real" :class="{pending:!ms.actual_start}"
-                         :style="barOf(ms,'real').style"
-                         @mouseenter="showTip($event, ms, 'real')" @mouseleave="hideTip">
-                      <span v-if="ms.actual_end" class="cap"></span>
-                    </div>
+                      <!-- 实际完成（按天着色：蓝/红/黄） -->
+                      <div v-for="s in realSegs(b)" :key="'seg'+b.id+s.start+s.kind"
+                           class="gt-bar gt-real" :class="'k-'+s.kind" :style="s.style"
+                           @mouseenter="showSegTip($event, b, s)" @mouseleave="hideTip">
+                        <span v-if="s.isEnd" class="cap"></span>
+                      </div>
+                    </template>
                   </div>
                 </div>
 
@@ -2314,6 +2327,29 @@ function bootApp() {
       },
       todayOffset() { return this.winStart ? diffDays(this.todayISO, this.winStart) : -1; },
 
+      /* 甘特行：默认一个里程碑一行；若某块的 row 指向另一块的 id，
+         则二者合并到同一行（用于「同一任务、多个题号区间」的独立任务块） */
+      ganttRows() {
+        const map = new Map();
+        this.milestones.forEach(m => {
+          const key = m.row || m.id;
+          let r = map.get(key);
+          if (!r) { r = { key, main: null, blocks: [] }; map.set(key, r); }
+          r.blocks.push(m);
+        });
+        const order = {};
+        this.milestones.forEach((m, i) => { if (order[m.id] === undefined) order[m.id] = i; });
+        const rows = [];
+        map.forEach(r => {
+          r.blocks.sort((a, b) => String(a.planned_start || '').localeCompare(String(b.planned_start || '')));
+          r.main = r.blocks.find(b => b.id === r.key) || r.blocks[0];
+          if (r.main !== r.blocks[0]) r.blocks = [r.main].concat(r.blocks.filter(b => b !== r.main));
+          rows.push(r);
+        });
+        rows.sort((a, b) => (order[a.main.id] ?? 1e9) - (order[b.main.id] ?? 1e9));
+        return rows;
+      },
+
       /* ---- 热力图 ---- */
       heat() {
         const weeks = HEAT_WEEKS;
@@ -2664,14 +2700,73 @@ function bootApp() {
           }
         };
       },
-      showTip(ev, ms, type) {
+      /* ---------------- 实际完成条：按天着色 ----------------
+         数据约定：milestone.days = { '2026-09-11': 1, '2026-09-12': 0 }
+           1 = 当天按计划完成（蓝）· 0 = 当天没做（红）· 缺省 = 未记录
+         超出 planned_end 的日期若完成，则画黄色「补做」条；计划条永不因此拉长。 */
+      dayRec(ms, iso) {
+        const v = (ms.days || {})[iso];
+        if (v === 1 || v === true) return 1;
+        if (v === 0 || v === false) return 0;
+        return -1;
+      },
+      realDays(ms) {
+        const out = [];
+        const rec = ms.days || {};
+        const recDates = Object.keys(rec).sort();
+        const start = ms.actual_start || recDates[0] || null;   // 不自动开工：没有实际记录就不画条
+        if (!start) return out;
+        let end = ms.actual_end || this.todayISO;
+        if (end < start) end = start;
+        if (end > this.todayISO) end = this.todayISO;           // 不越过今天
+        const n = diffDays(end, start);
+        for (let i = 0; i <= n; i++) {
+          const iso = isoOf(addDays(parseISO(start), i));
+          const r = this.dayRec(ms, iso);
+          let kind;
+          if (r === 1) kind = (ms.planned_end && iso > ms.planned_end) ? 'ext' : 'done';
+          else if (r === 0) kind = 'miss';
+          else kind = (iso === this.todayISO) ? 'todo' : 'miss'; // 未记录 = 没做（今天除外，今天还没结束）
+          out.push({ iso, kind });
+        }
+        return out;
+      },
+      realSegs(ms) {
+        const merged = [];
+        this.realDays(ms).forEach(d => {
+          const a = this.dayIndex(d.iso);
+          const last = merged[merged.length - 1];
+          if (last && last.kind === d.kind && last.b === a - 1) { last.b = a; last.end = d.iso; }
+          else merged.push({ kind: d.kind, a, b: a, start: d.iso, end: d.iso });
+        });
+        return merged.map(s => {
+          const A = Math.max(s.a, 0), B = Math.min(s.b, WIN_DAYS - 1);
+          return {
+            kind: s.kind, start: s.start, end: s.end, days: s.b - s.a + 1,
+            isEnd: !!ms.actual_end && s.end === ms.actual_end,
+            inWin: B >= A && A <= WIN_DAYS - 1 && B >= 0,
+            style: { left: (A * DAY_W + 2) + 'px', width: Math.max((B - A + 1) * DAY_W - 5, 9) + 'px' }
+          };
+        }).filter(s => s.inWin);
+      },
+      realStat(ms) {
+        const st = { done: 0, miss: 0, ext: 0, todo: 0, total: 0 };
+        this.realDays(ms).forEach(d => { st[d.kind]++; st.total++; });
+        return st;
+      },
+      showSegTip(ev, ms, seg) {
         const rect = ev.currentTarget.getBoundingClientRect();
-        const isPlan = type === 'plan';
-        const rows = isPlan
-          ? [['计划工期', (ms.planned_start || '—') + ' → ' + (ms.planned_end || '—')],
-             ['剩余', (ms.planned_end && ms.planned_end >= this.todayISO) ? diffDays(ms.planned_end, this.todayISO) + ' 天' : (ms.planned_end ? '已超期 ' + diffDays(this.todayISO, ms.planned_end) + ' 天' : '—')]]
-          : [['实际投入', (ms.actual_start || '—') + ' → ' + (ms.actual_end || '进行中')],
-             ['偏差', this.devText(ms)]];
+        const st = this.realStat(ms);
+        const LABEL = { done: '已完成当日进度', miss: '当天没做', ext: '超出计划后补做', todo: '今天 · 尚未记录' };
+        const rows = [
+          ['本段', seg.start + (seg.end !== seg.start ? ' → ' + seg.end : '') + ' · ' + seg.days + ' 天'],
+          ['状态', LABEL[seg.kind]],
+          ['累计', '完成 ' + st.done + ' 天 · 没做 ' + st.miss + ' 天' + (st.ext ? ' · 超期补做 ' + st.ext + ' 天' : '')]
+        ];
+        if (ms.planned_end && seg.kind === 'ext') {
+          rows.push(['超出计划', diffDays(seg.end, ms.planned_end) + ' 天']);
+        }
+        rows.push(['计划工期', (ms.planned_start || '—') + ' → ' + (ms.planned_end || '—')]);
         let html = rows.map(row => '<div><span class="k">' + row[0] + '</span>' + row[1] + '</div>').join('');
         html += '<div style="margin-top:7px;padding-top:7px;border-top:1px solid var(--bd)">'
               + '<span class="k">进度</span>' + (ms.progress || 0) + '%'
@@ -2680,7 +2775,32 @@ function bootApp() {
           show: true,
           x: Math.max(8, Math.min(rect.left, window.innerWidth - 300)),
           y: rect.bottom + 10,
-          title: ms.title,
+          title: ms.title + (ms.range ? ' · ' + ms.range : ''),
+          html
+        };
+      },
+
+      showTip(ev, ms, type) {
+        const rect = ev.currentTarget.getBoundingClientRect();
+        const isPlan = type === 'plan';
+        const rows = isPlan
+          ? [['计划工期', (ms.planned_start || '—') + ' → ' + (ms.planned_end || '—')],
+             ['剩余', (ms.planned_end && ms.planned_end >= this.todayISO) ? diffDays(ms.planned_end, this.todayISO) + ' 天' : (ms.planned_end ? '已超期 ' + diffDays(this.todayISO, ms.planned_end) + ' 天' : '—')]]
+          : [['实际投入', (ms.actual_start || '—') + ' → ' + (ms.actual_end || '进行中')],
+             ['偏差', this.devText(ms)]];
+        if (isPlan) {
+          const st = this.realStat(ms);
+          rows.push(['已完成', st.done + ' 天' + (st.ext ? ' · 超期补做 ' + st.ext + ' 天' : '') + (st.miss ? ' · 没做 ' + st.miss + ' 天' : '')]);
+        }
+        let html = rows.map(row => '<div><span class="k">' + row[0] + '</span>' + row[1] + '</div>').join('');
+        html += '<div style="margin-top:7px;padding-top:7px;border-top:1px solid var(--bd)">'
+              + '<span class="k">进度</span>' + (ms.progress || 0) + '%'
+              + (ms.note ? '<br><span class="k">备注</span>' + esc(ms.note) : '') + '</div>';
+        this.tip = {
+          show: true,
+          x: Math.max(8, Math.min(rect.left, window.innerWidth - 300)),
+          y: rect.bottom + 10,
+          title: ms.title + (ms.range ? ' · ' + ms.range : ''),
           html
         };
       },
