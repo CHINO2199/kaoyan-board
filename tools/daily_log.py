@@ -155,6 +155,11 @@ def plan_covers(m: dict, day: str) -> bool:
     return not (pe and day > pe)
 
 
+def norm(s: str) -> str:
+    """归一化用于模糊匹配：去掉空白与常见分隔符（「30 讲」≈「30讲」）"""
+    return "".join(ch for ch in str(s) if not ch.isspace() and ch not in "·・-—_/（）()")
+
+
 def match_tasks(ms: list, tokens: list):
     """token → 里程碑。支持 id 精确、标题子串、range 子串。返回 (命中表, 未命中表)"""
     hit, miss = {}, []
@@ -166,7 +171,8 @@ def match_tasks(ms: list, tokens: list):
         if exact:
             hit[exact[0]["id"]] = exact[0]
             continue
-        fuzzy = [m for m in ms if t in (m.get("title") or "") or t in (m.get("range") or "")]
+        nt = norm(t)
+        fuzzy = [m for m in ms if nt and (nt in norm(m.get("title")) or nt in norm(m.get("range")))]
         if fuzzy:
             hit[fuzzy[0]["id"]] = fuzzy[0]
             if len(fuzzy) > 1:
@@ -242,20 +248,25 @@ def build(spec: dict, data: dict, allow_plan_change=False):
 
     # ---- 3) 进度（可选） ----
     prog = spec.get("progress") or {}
+    prog_changes = []
     for mid, val in prog.items():
         t = next((m for m in ms if m.get("id") == mid), None)
-        if t:
-            t["progress"] = int(val)
-            if int(val) >= 100:
-                t["status"] = "done"
-                t["actual_end"] = t.get("actual_end") or day
-            elif int(val) > 0:
-                t["status"] = "ongoing"
+        if not t:
+            print(f"  ! progress 里的 {mid} 未找到对应任务，已忽略")
+            continue
+        before = t.get("progress") or 0
+        t["progress"] = int(val)
+        if int(val) >= 100:
+            t["status"] = "done"
+            t["actual_end"] = t.get("actual_end") or day
+        elif int(val) > 0:
+            t["status"] = "ongoing"
+        prog_changes.append((mid, t.get("title"), before, int(val)))
 
-    return entry, rows, miss_tokens, touched
+    return entry, rows, miss_tokens, touched, prog_changes
 
 
-def print_preview(day, entry, rows, miss_tokens):
+def print_preview(day, entry, rows, miss_tokens, prog_changes=()):
     print(f"\n── 每日记录 {day} ─────────────────────────────────────────")
     print(f"  总时长 {fmt_h(float(entry['total_hours']) * 60)}"
           f" | 分科 " + " · ".join(f"{k} {v}h" for k, v in entry["subject_hours"].items()))
@@ -281,6 +292,8 @@ def print_preview(day, entry, rows, miss_tokens):
     red = [r[0] for r in rows if r[6] == 0]
     print(f"\n  蓝条({len(blue)})：{blue}")
     print(f"  红条({len(red)})：{red}")
+    for mid, title, before, after in prog_changes:
+        print(f"  进度：{mid} {title} {before}% → {after}%")
     if miss_tokens:
         print(f"\n  ⚠️  done 里这些没匹配到任务，请核对：{miss_tokens}")
 
@@ -328,8 +341,8 @@ def main():
             print("  ·", n)
         base = json.loads(json.dumps(data, ensure_ascii=False))
 
-    entry, rows, miss_tokens, touched = build(spec, data, args.allow_plan_change)
-    print_preview(day, entry, rows, miss_tokens)
+    entry, rows, miss_tokens, touched, prog_changes = build(spec, data, args.allow_plan_change)
+    print_preview(day, entry, rows, miss_tokens, prog_changes)
 
     plan_diff = check_plan_unchanged(data, base)
     print(f"\n  计划框改动：{plan_diff if plan_diff else '无 ✅（planned_start/planned_end 未动）'}")
