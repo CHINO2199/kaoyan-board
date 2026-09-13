@@ -1088,10 +1088,16 @@ html[data-theme="dark"] .shelf-board{background:linear-gradient(180deg,#4A2038,#
             <path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H10l2 2.4h5.5A2.5 2.5 0 0 1 20 9.9v7.6A2.5 2.5 0 0 1 17.5 20h-11A2.5 2.5 0 0 1 4 17.5z"/>
           </svg>
         </div>
-        <h2 style="text-align:center">还没有数据文件</h2>
+        <h2 style="text-align:center">{{ gateDetail ? '数据文件已损坏' : '还没有数据文件' }}</h2>
         <p style="text-align:center;margin-bottom:22px">
-          未在站点根目录找到 <code style="font-family:var(--mono);color:var(--pink-500)">data.enc</code><br>
-          你可以先浏览示范数据，或按 README 生成真实加密文件。
+          <template v-if="gateDetail">
+            <code style="font-family:var(--mono);color:var(--pink-500)">data.enc</code> 存在但无法解析：{{ gateDetail }}<br>
+            这不是密码问题 —— 请检查仓库里的 data.enc 是否被提交了未解决的 Git 合并冲突。
+          </template>
+          <template v-else>
+            未在站点根目录找到 <code style="font-family:var(--mono);color:var(--pink-500)">data.enc</code><br>
+            你可以先浏览示范数据，或按 README 生成真实加密文件。
+          </template>
         </p>
         <div style="display:flex;flex-direction:column;gap:10px">
           <button class="btn btn-primary" style="width:100%;padding:12px" @click="useDemo">
@@ -2182,7 +2188,8 @@ function bootApp() {
     data() {
       return {
         ready: false,           // 解锁门是否已通过
-        gateEmpty: false,       // data.enc 缺失
+        gateEmpty: false,       // data.enc 缺失或损坏
+        gateDetail: '',         // 损坏时的原因说明（如含 Git 冲突标记）
         forceDemo: false,
         isDemo: false,
         loading: false,
@@ -2542,13 +2549,18 @@ function bootApp() {
 
       /* ---------------- 数据加载 ---------------- */
       async loadEnc() {
-        this.gateEmpty = false; this.ready = false;
+        this.gateEmpty = false; this.gateDetail = ''; this.ready = false;
         try {
           // 加时间戳：GitHub Pages 的 CDN 会缓存 10 分钟，带参数可立即拿到最新数据
           const res = await fetch('./data.enc?t=' + Date.now(), { cache: 'no-store' });
           if (!res.ok) throw new Error('missing');
           const txt = (await res.text()).trim();
-          if (!txt || /^</.test(txt)) throw new Error('missing');   // GitHub Pages 的 404 HTML
+          // 404 判定必须严格：GitHub Pages 的 404 页是 HTML（<!DOCTYPE html>…）。
+          // 早先用「以 < 开头」判断，会把含 Git 冲突标记（<<<<<<< HEAD）的密文误判成「文件缺失」，
+          // 于是线上明明有文件却显示「还没有数据文件」。这里只认真实 HTML 文档。
+          if (!txt) throw new Error('missing');
+          if (/^<(!doctype|html|\?xml)/i.test(txt)) throw new Error('missing');
+          if (txt.indexOf('<<<<<<<') >= 0 || txt.indexOf('>>>>>>>') >= 0) throw new Error('conflict');
           this.encText = txt;
 
           const cached = this.getCachedKey();
@@ -2563,6 +2575,12 @@ function bootApp() {
           this.$nextTick(() => { if (this.$refs.pwdInput) this.$refs.pwdInput.focus(); });
         } catch (e) {
           if (this.forceDemo) { this.useDemo(); return; }
+          const conflict = e && e.message === 'conflict';
+          if (conflict) {
+            console.error('[百日研途] data.enc 含 Git 冲突标记（<<<<<<< / >>>>>>>），密文已损坏。'
+              + '请用 `python update.py --encrypt-only` 重新生成后推送。');
+          }
+          this.gateDetail = conflict ? '含 Git 冲突标记（<<<<<<< / >>>>>>>）' : '';
           this.gateEmpty = true;
         }
       },

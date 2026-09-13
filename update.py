@@ -418,11 +418,33 @@ def attach_memo(data: dict, memo: dict, day=None) -> None:
     print("  + %s 暂无学习记录，已创建骨架并写入墨墨数据" % day)
 
 
+def sanity_check_enc(raw: str) -> None:
+    """推送前的最后一道闸：拦住两类「看着像密文、其实是坏文件」的情况。
+
+    ① Git 冲突标记 —— 手动解决 `git pull --rebase` 冲突时最容易把
+       `<<<<<<< HEAD / ======= / >>>>>>>` 一起提交进去，前端只会显示
+       「还没有数据文件」，极难定位（2026-09-13 踩过一次）。
+    ② HTML —— GitHub Pages 的 404 页被当成密文保存下来。
+    """
+    for mk in ("<<<<<<<", "=======", ">>>>>>>"):
+        if mk in raw:
+            print(f"× data.enc 含 Git 冲突标记 {mk!r} —— 这是一次未解决的合并冲突，密文已被污染。")
+            print("  修复：git checkout 到干净版本，或确认 data.json 正确后执行")
+            print("        python update.py --encrypt-only")
+            sys.exit(1)
+    head = raw.lstrip()[:20].lower()
+    if head.startswith("<!doctype") or head.startswith("<html") or head.startswith("<?xml"):
+        print("× data.enc 的内容是 HTML，不是密文（多半是 GitHub Pages 的 404 页）")
+        sys.exit(1)
+
+
 def do_verify(password: str) -> None:
     if not DATA_ENC.exists():
         print("× data.enc 不存在")
         sys.exit(1)
-    text = decrypt_text(DATA_ENC.read_text(encoding="utf-8"), password)
+    raw = DATA_ENC.read_text(encoding="utf-8")
+    sanity_check_enc(raw)
+    text = decrypt_text(raw, password)
     data = json.loads(text)
     meta = data.get("meta", {})
     logs = data.get("daily_logs", [])
