@@ -105,15 +105,23 @@ git commit -m "log: 补录 2026-09-12 学习记录"
 
 **推送（默认自动执行，Agent 完成，无需主人确认；2026-09-13 起）**：
 
-```powershell
-# 在 PowerShell 里执行（走 Windows 凭据管理器缓存的 GitHub 凭据）
-Set-Location 'C:\Users\33270\Desktop\ky\每日工作'; git push origin main
+```bash
+# 首选：用 Python 包装 git（回显完整，不受 Git Bash 环境损坏影响）
+python .local/gitp.py push origin main
+
+# 备选：系统 shell 里直接推（走 Windows 凭据管理器缓存的 GitHub 凭据）
+git push origin main
 ```
 
 > 等价物：双击工作区里的 **`一键同步看板.lnk`**，其内容为
 > `git add .; git commit -m 'update'; git push`。
 > ⚠️ 该快捷方式是**盲 add 全部**——日常仍应先逐条核对 `git status --short`，只提交该提交的文件。
-> Git Bash 里 `git push` 推不动，只是因为**非交互弹不出凭据窗口**，不是没权限。
+> Git Bash 里 `git push` 推不动，只是因为**非交互弹不出凭据窗口**，不是没权限（凭据在 Windows 凭据管理器里）。
+>
+> **环境坑**：Git Bash 工具链会中途崩坏（`dirname`/`cd`/`head` 找不到）→ 一律改用 `.local/gitp.py`。
+> 另外沙箱内 git 对 `refs/remotes/*` 的写入**不落盘**（`git fetch` 报成功但 `origin/main` 随即消失，
+> `git status -sb` 显示 `[gone]`）→ 用 Python 把**完整 40 位哈希**写进 `.git/refs/remotes/origin/main`；
+> 要权威远端 SHA 用 `git ls-remote origin refs/heads/main`。
 
 ### 6. 推送后核验（必做，异常就停下报告）
 
