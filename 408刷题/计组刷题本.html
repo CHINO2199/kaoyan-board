@@ -223,7 +223,7 @@ tr:hover td{background:#fafafa}
     <button class="btn btn-s btn-sm" id="exp-btn">⬆ 导出</button><button class="btn btn-s btn-sm" id="imp-btn">⬇ 导入</button><input type="file" id="imp-file" accept=".json" style="display:none"><button class="btn btn-d btn-sm" id="rst-btn">清空</button>
   </div>
   <div class="tbl-w"><table><thead><tr>
-    <th>ID</th><th>章节</th><th>题目</th><th>🖼</th><th>📝</th>
+    <th data-sk="id" title="点击按题号排序">ID<span class="arw">⇅</span></th><th>章节</th><th>题目</th><th>🖼</th><th>📝</th>
     <th data-sk="attempts">刷过<span class="arw">⇅</span></th><th data-sk="wrong">错<span class="arw">⇅</span></th><th data-sk="accuracy" class="sorted">正确率<span class="arw">↓</span></th><th>错题本</th>
   </tr></thead><tbody id="tbl-all"></tbody></table></div>
 </div>
@@ -235,7 +235,7 @@ tr:hover td{background:#fafafa}
   </div>
   <div class="tbar"><input type="text" id="search-book" placeholder="🔍 搜索..."><select id="filter-ch-book"></select></div>
   <div class="tbl-w"><table><thead><tr>
-    <th><input type="checkbox" id="check-all-book"></th><th>ID</th><th>章节</th><th>题目</th><th>🖼</th><th>📝 备注</th>
+    <th><input type="checkbox" id="check-all-book"></th><th data-sk="id-b" title="点击按题号排序">ID<span class="arw">⇅</span></th><th>章节</th><th>题目</th><th>🖼</th><th>📝 备注</th>
     <th data-sk="wrong-b">错<span class="arw">⇅</span></th><th data-sk="accuracy-b">正确率<span class="arw">↓</span></th><th>操作</th>
   </tr></thead><tbody id="tbl-book"></tbody></table></div>
 </div>
@@ -291,6 +291,7 @@ tabs.forEach(function(t){t.addEventListener('click',function(){
 var SKY='accuracy',SDI='asc',BSK='accuracy-b',BSD='asc',rOrd=[],rI=0,rCur=null,rTgt=null;
 var chQ=[],chI=0,chA=[],eSt={mode:'setup',ql:[],an:[],idx:0};
 
+function natCmp(a,b){a=String(a==null?'':a);b=String(b==null?'':b);var ra=a.match(/(\d+|\D+)/g)||[],rb=b.match(/(\d+|\D+)/g)||[],n=Math.max(ra.length,rb.length);for(var i=0;i<n;i++){if(ra[i]===undefined)return -1;if(rb[i]===undefined)return 1;var ua=ra[i],ub=rb[i],na=/^\d+$/.test(ua),nb=/^\d+$/.test(ub);if(na&&nb){var x=parseInt(ua,10),y=parseInt(ub,10);if(x!==y)return x<y?-1:1}else if(ua!==ub)return ua<ub?-1:1}return 0}
 function RAL(){
   var cs=document.getElementById('filter-ch'),cv=cs.value,m={};
   QS.forEach(function(q){m[q.section]=q.section});
@@ -304,7 +305,7 @@ function RAL(){
     if(fs==='never'&&x.r.a>0)return false;if(fs==='done'&&x.r.a===0)return false;if(fs==='wrong'&&x.r.w===0)return false;if(fs==='book'&&!x.r.b)return false;
     return true;});
   var di=SDI==='asc'?1:-1;
-  rows.sort(function(a,b){var av,bv;if(SKY==='attempts'){av=a.r.a;bv=b.r.a}else if(SKY==='wrong'){av=a.r.w;bv=b.r.w}else{if(a.acc===null&&b.acc===null)return 0;if(a.acc===null)return 1;if(b.acc===null)return -1;av=a.acc;bv=b.acc}return(av-bv)*di;});
+  rows.sort(function(a,b){if(SKY==='id')return natCmp(a.q.id,b.q.id)*di;var av,bv;if(SKY==='attempts'){av=a.r.a;bv=b.r.a}else if(SKY==='wrong'){av=a.r.w;bv=b.r.w}else{if(a.acc===null&&b.acc===null)return 0;if(a.acc===null)return 1;if(b.acc===null)return -1;av=a.acc;bv=b.acc}return(av-bv)*di;});
   document.querySelectorAll('#v-all th[data-sk]').forEach(function(th){th.classList.toggle('sorted',th.dataset.sk===SKY);th.querySelector('.arw').textContent=th.dataset.sk===SKY?(SDI==='asc'?'↑':'↓'):'⇅';});
   var tb=document.getElementById('tbl-all');
   if(!rows.length){tb.innerHTML='<tr><td colspan="9" style="text-align:center;padding:32px;color:#86868b">无匹配题目</td></tr>';return}
@@ -315,7 +316,7 @@ function RAL(){
 document.getElementById('search-all').addEventListener('input',RAL);
 document.getElementById('filter-ch').addEventListener('change',RAL);
 document.getElementById('filter-st').addEventListener('change',RAL);
-document.querySelectorAll('#v-all th[data-sk]').forEach(function(th){th.addEventListener('click',function(){if(SKY===this.dataset.sk)SDI=SDI==='asc'?'desc':'asc';else{SKY=this.dataset.sk;SDI=SKY==='accuracy'?'asc':'desc'}RAL();})});
+document.querySelectorAll('#v-all th[data-sk]').forEach(function(th){th.addEventListener('click',function(){if(SKY===this.dataset.sk)SDI=SDI==='asc'?'desc':'asc';else{SKY=this.dataset.sk;SDI=(SKY==='accuracy'||SKY==='id')?'asc':'desc'}RAL();})});
 function TB(id){var r=GR(id);UPD(id,{b:!r.b});toast(r.b?'已移出错题本':'已加入错题本 📌');RAL()}
 
 function RBK(){
@@ -326,7 +327,7 @@ function RBK(){
   var fc=cs.value,fq=(document.getElementById('search-book').value||'').toLowerCase();
   var rows=bq.filter(function(x){if(fc&&x.q.section!==fc)return false;if(fq&&(x.q.question+' '+x.q.id).toLowerCase().indexOf(fq)<0)return false;return true;});
   var di=BSD==='asc'?1:-1;
-  rows.sort(function(a,b){var av,bv;if(BSK==='wrong-b'){av=a.r.w;bv=b.r.w}else{if(a.acc===null&&b.acc===null)return 0;if(a.acc===null)return 1;if(b.acc===null)return -1;av=a.acc;bv=b.acc}return(av-bv)*di;});
+  rows.sort(function(a,b){if(BSK==='id-b')return natCmp(a.q.id,b.q.id)*di;var av,bv;if(BSK==='wrong-b'){av=a.r.w;bv=b.r.w}else{if(a.acc===null&&b.acc===null)return 0;if(a.acc===null)return 1;if(b.acc===null)return -1;av=a.acc;bv=b.acc}return(av-bv)*di;});
   document.querySelectorAll('#v-book th[data-sk]').forEach(function(th){th.classList.toggle('sorted',th.dataset.sk===BSK);th.querySelector('.arw').textContent=th.dataset.sk===BSK?(BSD==='asc'?'↑':'↓'):'⇅';});
   var tb=document.getElementById('tbl-book');
   if(!rows.length){tb.innerHTML='<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--sub)">📌 错题本为空</td></tr>';return}
