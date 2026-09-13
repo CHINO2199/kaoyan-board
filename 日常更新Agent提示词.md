@@ -103,11 +103,17 @@ git add data.enc
 git commit -m "log: 补录 2026-09-12 学习记录"
 ```
 
-**推送由主人执行**（Agent 终端是非交互的，弹不出 GitHub 凭据窗口）：
+**推送（Agent 可自行完成，2026-09-13 起）**：
 
-```bash
-git push
+```powershell
+# 在 PowerShell 里执行（走 Windows 凭据管理器缓存的 GitHub 凭据）
+Set-Location 'C:\Users\33270\Desktop\ky\每日工作'; git push origin main
 ```
+
+> 等价物：双击工作区里的 **`一键同步看板.lnk`**，其内容为
+> `git add .; git commit -m 'update'; git push`。
+> ⚠️ 该快捷方式是**盲 add 全部**——日常仍应先逐条核对 `git status --short`，只提交该提交的文件。
+> Git Bash 里 `git push` 推不动，只是因为**非交互弹不出凭据窗口**，不是没权限。
 
 ---
 
