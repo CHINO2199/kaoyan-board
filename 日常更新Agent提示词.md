@@ -103,7 +103,7 @@ git add data.enc
 git commit -m "log: 补录 2026-09-12 学习记录"
 ```
 
-**推送（Agent 可自行完成，2026-09-13 起）**：
+**推送（默认自动执行，Agent 完成，无需主人确认；2026-09-13 起）**：
 
 ```powershell
 # 在 PowerShell 里执行（走 Windows 凭据管理器缓存的 GitHub 凭据）
@@ -114,6 +114,16 @@ Set-Location 'C:\Users\33270\Desktop\ky\每日工作'; git push origin main
 > `git add .; git commit -m 'update'; git push`。
 > ⚠️ 该快捷方式是**盲 add 全部**——日常仍应先逐条核对 `git status --short`，只提交该提交的文件。
 > Git Bash 里 `git push` 推不动，只是因为**非交互弹不出凭据窗口**，不是没权限。
+
+### 6. 推送后核验（必做，异常就停下报告）
+
+1. `curl` 线上 `data.enc`，与本地比 sha256 —— 应逐字节相同、无 `<<<<<<<`
+2. `curl` 线上 `index.html`，其 sha256 应与 `git show HEAD:index.html` 一致（证明 Pages 已部署）
+3. 无头 Chrome 加载线上 URL，页面应停在**密码解锁页**（含 `type=password`），
+   而非「还没有数据文件 / 数据文件已损坏」
+
+> 现成脚本：`.local/check_live_dom.py`（加载线上并判定页面状态）。
+> 只有这三步都过，才算这一天录入真正完成。
 
 ---
 
