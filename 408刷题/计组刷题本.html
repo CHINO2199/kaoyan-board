@@ -80,7 +80,7 @@ tr:hover td{background:#fafafa}
 .setup{text-align:center;padding:40px 20px}.setup h2{font-size:22px;margin-bottom:8px}.setup p{color:var(--sub);margin-bottom:24px}
 .setup-opts{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
 .setup-opt{padding:20px 36px;border:2px solid var(--bdr);border-radius:var(--rds);cursor:pointer;background:var(--card);font-family:inherit;transition:.15s;min-width:140px}.setup-opt:hover{border-color:var(--pri);background:var(--pri-lt)}.setup-opt .n{font-size:36px;font-weight:700;color:var(--pri)}.setup-opt .d{font-size:12px;color:var(--sub);margin-top:4px}
-.ch-sel{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}.ch-sel .cs{font-size:12px;padding:7px 14px;border:1px solid var(--bdr);border-radius:20px;cursor:pointer;background:var(--card);font-family:inherit;transition:.12s;color:var(--sub)}.ch-sel .cs:hover{border-color:var(--pri);color:var(--pri)}.ch-sel .cs.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+.ch-sel{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}.ch-sel .cs{font-size:12px;padding:7px 14px;border:1px solid var(--bdr);border-radius:20px;cursor:pointer;background:var(--card);font-family:inherit;transition:.12s;color:var(--sub)}.ch-sel .cs:hover{border-color:var(--pri);color:var(--pri)}.ch-sel .cs.on{background:var(--pri);color:#fff;border-color:var(--pri)}.ch-sel .rch{font-size:12px;padding:7px 14px;border:1px solid var(--bdr);border-radius:20px;cursor:pointer;background:var(--card);font-family:inherit;transition:.12s;color:var(--sub)}.ch-sel .rch:hover{border-color:var(--pri);color:var(--pri)}.ch-sel .rch.on{background:var(--pri);color:#fff;border-color:var(--pri)}.ch-sel .rch[disabled]{opacity:.38;cursor:not-allowed}.ch-sel .rch b{margin-left:6px;font-size:11px;font-weight:600;opacity:.75}
 .drop-zone{width:32px;height:32px;border:1px dashed var(--bdr);border-radius:6px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:.12s;font-size:14px;position:relative;overflow:hidden}.drop-zone:hover{border-color:var(--pri);background:var(--pri-lt)}.drop-zone.has-img{border-style:solid;border-color:var(--succ)}.drop-zone img{width:100%;height:100%;object-fit:cover;border-radius:4px}.drop-zone .remove-img{position:absolute;top:-2px;right:-2px;width:14px;height:14px;background:var(--dang);color:#fff;border-radius:50%;font-size:9px;display:none;align-items:center;justify-content:center;cursor:pointer}.drop-zone.has-img:hover .remove-img{display:flex}
 .memo-inline{width:100%;min-height:26px;border:1px solid transparent;border-radius:4px;padding:2px 6px;font-size:11px;font-family:inherit;background:transparent;color:var(--sub);resize:vertical;transition:.12s}.memo-inline:hover{border-color:var(--bdr)}.memo-inline:focus{border-color:var(--pri);outline:none;background:var(--card);color:var(--text)}.memo-inline.has-text{border-color:var(--warn);color:var(--text)}
 .toast{position:fixed;top:18px;right:18px;background:#1d1d1f;color:#fff;padding:12px 20px;border-radius:8px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:300;animation:slideIn .25s}
@@ -245,7 +245,7 @@ tr:hover td{background:#fafafa}
   <div class="qcard" id="ch-card" style="display:none"></div>
 </div>
 
-<div class="view" id="v-random"><div class="qcard" id="rand-card"></div></div>
+<div class="view" id="v-random"><div class="card" id="rnd-setup"></div><div class="qcard" id="rand-card" style="display:none"></div></div>
 <div class="view" id="v-exam"><div class="card setup" id="exam-setup"></div><div class="qcard" id="exam-card" style="display:none"></div></div>
 </div></div>
 
@@ -285,10 +285,10 @@ var tabs=document.querySelectorAll('.tab'),views=document.querySelectorAll('.vie
 tabs.forEach(function(t){t.addEventListener('click',function(){
   tabs.forEach(function(x){x.classList.remove('on')});views.forEach(function(x){x.classList.remove('on')});
   this.classList.add('on');var v=this.dataset.tab;document.getElementById('v-'+v).classList.add('on');
-  if(v==='all')RAL();else if(v==='book')RBK();else if(v==='chapter')RCS();else if(v==='random')SRD();else if(v==='exam')RES();else if(v==='dash')RDASH();
+  if(v==='all')RAL();else if(v==='book')RBK();else if(v==='chapter')RCS();else if(v==='random')RSET();else if(v==='exam')RES();else if(v==='dash')RDASH();
 })});
 
-var SKY='accuracy',SDI='asc',BSK='accuracy-b',BSD='asc',rOrd=[],rI=0,rCur=null,rTgt=null;
+var SKY='accuracy',SDI='asc',BSK='accuracy-b',BSD='asc',rOrd=[],rI=0,rCur=null,rTgt=null,rSelCh=[],rRes=[];
 var chQ=[],chI=0,chA=[],eSt={mode:'setup',ql:[],an:[],idx:0};
 
 function natCmp(a,b){a=String(a==null?'':a);b=String(b==null?'':b);var ra=a.match(/(\d+|\D+)/g)||[],rb=b.match(/(\d+|\D+)/g)||[],n=Math.max(ra.length,rb.length);for(var i=0;i<n;i++){if(ra[i]===undefined)return -1;if(rb[i]===undefined)return 1;var ua=ra[i],ub=rb[i],na=/^\d+$/.test(ua),nb=/^\d+$/.test(ub);if(na&&nb){var x=parseInt(ua,10),y=parseInt(ub,10);if(x!==y)return x<y?-1:1}else if(ua!==ub)return ua<ub?-1:1}return 0}
@@ -424,10 +424,31 @@ function settleImg(i){var f=i.files[0];if(!f)return;uploadImg(i.dataset.qid,f,'a
 function stDelImg(qid){if(!confirm('删除图片？'))return;UPD(qid,{img:''});finishCh()}
 window.addSt=addSt;window.settleImg=settleImg;window.stDelImg=stDelImg;
 
-function SRD(tgtId){var s=LS(),bis=[];QS.forEach(function(q){var r=s[q.id];if(r&&r.b)bis.push(q.id)});rTgt=tgtId||null;if(tgtId)rOrd=[tgtId];else{if(!bis.length){document.getElementById('rand-card').innerHTML='<div class="empty"><div class="ico">📌</div><p>错题本为空</p></div>';return}rOrd=bis.slice().sort(function(){return Math.random()-.5})}rI=0;loadRnd()}
-function loadRnd(){if(!rTgt&&rI>=rOrd.length){var s=LS(),bis=[];QS.forEach(function(q){var r=s[q.id];if(r&&r.b)bis.push(q.id)});rOrd=bis.slice().sort(function(){return Math.random()-.5});rI=0}var q=QS.find(function(x){return x.id===rOrd[rI]});if(!q)return;rCur={q:q,ua:null};var card=document.getElementById('rand-card');paintQ(card,q,'r-opts','r-fb',!rTgt,rI,rOrd.length);
+function rndPool(){var s=LS(),p=[];QS.forEach(function(q){var r=s[q.id];if(!r||!r.b)return;if(rSelCh.length&&rSelCh.indexOf(q.section)<0)return;p.push(q.id)});return p}
+function rndBookCnt(){var s=LS(),m={};QS.forEach(function(q){var r=s[q.id];if(r&&r.b)m[q.section]=(m[q.section]||0)+1});return m}
+function rndCnt(){var sel=[].slice.call(document.querySelectorAll('#rnd-sel .rch.on'));rSelCh=sel.map(function(b){return b.dataset.ch});var cs=rndBookCnt(),n=0;rSelCh.forEach(function(c){n+=cs[c]||0});var el=document.getElementById('rnd-cnt');if(el)el.textContent=rSelCh.length?('已选 '+rSelCh.length+' 章 · 共 '+n+' 题'):'请至少选择 1 个章节';var st=document.getElementById('rnd-start');if(st)st.disabled=!n}
+function RSET(){
+  var su=document.getElementById('rnd-setup'),card=document.getElementById('rand-card');
+  card.style.display='none';su.style.display='';
+  var cnt=rndBookCnt(),chs=[];QS.forEach(function(q){if(chs.indexOf(q.section)<0)chs.push(q.section)});chs.sort();
+  var tot=0;Object.keys(cnt).forEach(function(k){tot+=cnt[k]});
+  if(!tot){su.innerHTML='<div class="empty"><div class="ico">📌</div><p>错题本为空</p><p style="font-size:12px;margin-top:8px">先去「全部题库」或「章节顺序刷题」刷些题，或在题目里加入错题本</p></div>';return}
+  var htm='<h3 style="margin-bottom:6px">选择章节<span class="hint" style="margin-left:8px">随机刷所选章节里的错题</span></h3>'
+   +'<div class="bulk-row" style="margin-top:14px"><button class="btn btn-s btn-sm" id="rnd-all">全选</button><button class="btn btn-s btn-sm" id="rnd-none">清空</button><button class="btn btn-s btn-sm" id="rnd-inv">反选</button><span id="rnd-cnt"></span></div>'
+   +'<div class="ch-sel" id="rnd-sel">'+chs.map(function(c){var n=cnt[c]||0;return'<button class="rch'+(n&&rSelCh.indexOf(c)>=0?' on':'')+'" data-ch="'+h(c)+'"'+(n?'':' disabled')+'>'+h(c)+'<b>'+n+'</b></button>'}).join('')+'</div>'
+   +'<div style="margin-top:18px"><p style="color:var(--sub);font-size:13px;margin-bottom:12px">刷完后弹出结算卡片，答对的题可手动勾选移出错题本</p><button class="btn btn-p" id="rnd-start" disabled>开始刷题</button></div>';
+  su.innerHTML=htm;
+  document.querySelectorAll('#rnd-sel .rch').forEach(function(b){b.addEventListener('click',function(){if(this.disabled)return;this.classList.toggle('on');rndCnt()})});
+  document.getElementById('rnd-all').onclick=function(){document.querySelectorAll('#rnd-sel .rch:not([disabled])').forEach(function(b){b.classList.add('on')});rndCnt()};
+  document.getElementById('rnd-none').onclick=function(){document.querySelectorAll('#rnd-sel .rch').forEach(function(b){b.classList.remove('on')});rndCnt()};
+  document.getElementById('rnd-inv').onclick=function(){document.querySelectorAll('#rnd-sel .rch:not([disabled])').forEach(function(b){b.classList.toggle('on')});rndCnt()};
+  document.getElementById('rnd-start').onclick=startRnd;
+  rndCnt();
+}
+function SRD(tgtId){rTgt=tgtId||null;rRes=[];if(tgtId){rOrd=[tgtId]}else{var p=rndPool();if(!p.length){document.getElementById('rnd-setup').style.display='none';var c0=document.getElementById('rand-card');c0.style.display='';c0.innerHTML='<div class="empty"><div class="ico">📌</div><p>错题本为空</p></div>';return}rOrd=p.sort(function(){return Math.random()-.5})}rI=0;document.getElementById('rnd-setup').style.display='none';document.getElementById('rand-card').style.display='';loadRnd()}
+function loadRnd(){if(rI>=rOrd.length){finishRnd();return}var q=QS.find(function(x){return x.id===rOrd[rI]});if(!q){finishRnd();return}rCur={q:q,ua:null};var card=document.getElementById('rand-card');paintQ(card,q,'r-opts','r-fb',!rTgt,rI,rOrd.length);
   handleQOpts('r-opts',q,function(k){rSingle(k)},function(k,slot){rSlot(k,slot)});
-  card.insertAdjacentHTML('beforeend','<div class="actions" style="display:flex;gap:10px;margin-top:16px"><button class="btn btn-p" onclick="rNext()">下一题 →</button></div>')}
+  card.insertAdjacentHTML('beforeend','<div class="actions" style="display:flex;gap:10px;margin-top:16px"><button class="btn btn-p" onclick="rNext()">'+(rI===rOrd.length-1?'完成 ✓':'下一题 →')+'</button><button class="btn btn-s" onclick="RSET()">重新选章节</button></div>')}
 function rSingle(k){if(!rCur)return;var q=getQ(rCur.q.id),ca=q.answer.toUpperCase().trim(),del=re('[,，、\\\\s]+'),cs=new Set(ca.split(del).filter(Boolean)),mu=cs.size>1;if(!mu){document.querySelectorAll('#r-opts .opt').forEach(function(o){o.classList.remove('sel')});document.querySelector('.opt[data-k="'+k+'"]').classList.add('sel')}else{document.querySelector('.opt[data-k="'+k+'"]').classList.toggle('sel')}var arr=Array.from(document.querySelectorAll('#r-opts .opt.sel')).map(function(o){return o.dataset.k});if(!arr.length)return;rCur.ua=arr.join('');var us=new Set(arr.map(function(x){return x.toUpperCase()}));var ok=cs.size>1?(cs.size===us.size&&Array.from(cs).every(function(x){return us.has(x)})):(us.size===1&&cs.has(Array.from(us)[0]));renderRFb(q,ok,arr)}
 function rSlot(k,slot){if(!rCur)return;var q=getQ(rCur.q.id),ca=q.answer.toUpperCase().trim(),cs2=ca.split('');document.querySelectorAll('#r-opts .opt[data-slot="'+slot+'"]').forEach(function(o){o.classList.remove('sel')});document.querySelector('.opt[data-k="'+k+'"][data-slot="'+slot+'"]').classList.add('sel');var grps=document.querySelectorAll('#r-opts .slot-group'),arr=[],allDone=true;grps.forEach(function(sg){var s=sg.querySelector('.opt.sel');if(s)arr.push(s.dataset.k);else allDone=false});if(!allDone)return;rCur.ua=arr.join('');var ok=arr.every(function(v,idx){return v.toUpperCase()===cs2[idx]});renderRFbSlot(q,ok,arr,cs2)}
 function renderRFb(q,ok,arr){var r=GR(q.id),fb=document.getElementById('r-fb');document.querySelectorAll('#r-opts .opt').forEach(function(o){o.classList.remove('ok','no');var kk=o.dataset.k.toUpperCase();var ca=q.answer.toUpperCase(),del=re('[,，、\\\\s]+'),cs=new Set(ca.split(del).filter(Boolean));if(cs.has(kk))o.classList.add('ok')});if(!ok){arr.forEach(function(k2){document.querySelector('#r-opts .opt[data-k="'+k2+'"]').classList.add('no')})}
@@ -436,8 +457,23 @@ function renderRFb(q,ok,arr){var r=GR(q.id),fb=document.getElementById('r-fb');d
 function renderRFbSlot(q,ok,arr,cs2){var r=GR(q.id),fb=document.getElementById('r-fb');document.querySelectorAll('#r-opts .opt').forEach(function(o){o.classList.remove('ok','no');var idx=parseInt(o.dataset.slot);if(cs2[idx]===o.dataset.k.toUpperCase())o.classList.add('ok');if(arr[idx]===o.dataset.k&&!ok)o.classList.add('no')});
   var fbS='';arr.forEach(function(p,idx){var o2=p.toUpperCase()===cs2[idx];fbS+='<div class="fb-slot"><span class="sn">'+(idx+1)+'</span><div style="flex:1"><div>你的选择：<span class="clr-no">'+h(p)+'.'+(q.options[p]?h(q.options[p]):'')+'</span></div><div>正确答案：<span class="clr-ok">'+h(cs2[idx])+'.'+(q.options[cs2[idx]]?h(q.options[cs2[idx]]):'')+'</span></div></div></div>';});
   fb.innerHTML='<div class="fb '+(ok?'ok':'no')+'"><div class="fbt '+(ok?'ok':'no')+'">'+(ok?'✓ 回答正确！':'✗ 回答错误')+'</div><div class="fbl"><strong>完整题目：</strong>'+h(q.question)+'</div>'+fbS+'<div class="fbl"><strong>你的答案：</strong>'+h(rCur.ua)+' <strong>正确答案：</strong>'+h(q.answer)+'</div>'+(r.mm?'<div class="fb-memo"><div class="memo-title">📝 备注</div>'+h(r.mm)+'</div>':'')+'<div class="fb-ref">来源：'+h(q.section)+' 第 '+q.number+' 题 · 🔗 按位置配对</div></div>';fb.scrollIntoView({behavior:'smooth',block:'center'})}
-function rNext(){if(rCur&&rCur.ua){var q=getQ(rCur.q.id);var ok;if(isMultiBlank(q)){var us2=rCur.ua.toUpperCase().split(''),cs2=q.answer.toUpperCase().split('');ok=us2.length===cs2.length&&us2.every(function(v,idx){return v===cs2[idx]})}else{var ca=q.answer.toUpperCase(),del=re('[,，、\\\\s]+'),cs2=new Set(ca.split(del).filter(Boolean)),us2=new Set(rCur.ua.toUpperCase().split('').filter(function(x){return/[A-D]/.test(x)}));ok=cs2.size>1?cs2.size===us2.size&&Array.from(cs2).every(function(x){return us2.has(x)}):(us2.size===1&&cs2.has(Array.from(us2)[0]))}REC(q.id,ok)}rI++;loadRnd()}
-window.SRD=SRD;window.rNext=rNext;window.rSingle=rSingle;
+function rNext(){if(rCur&&rCur.ua){var q=getQ(rCur.q.id);var ok;if(isMultiBlank(q)){var us2=rCur.ua.toUpperCase().split(''),cs2=q.answer.toUpperCase().split('');ok=us2.length===cs2.length&&us2.every(function(v,idx){return v===cs2[idx]})}else{var ca=q.answer.toUpperCase(),del=re('[,，、\\\\s]+'),cs2=new Set(ca.split(del).filter(Boolean)),us2=new Set(rCur.ua.toUpperCase().split('').filter(function(x){return/[A-D]/.test(x)}));ok=cs2.size>1?cs2.size===us2.size&&Array.from(cs2).every(function(x){return us2.has(x)}):(us2.size===1&&cs2.has(Array.from(us2)[0]))}REC(q.id,ok);rRes.push({id:q.id,ok:ok})}rI++;loadRnd()}
+window.SRD=SRD;window.rNext=rNext;window.rSingle=rSingle;window.RSET=RSET;window.startRnd=startRnd;
+function startRnd(){rSelCh=[].slice.call(document.querySelectorAll('#rnd-sel .rch.on')).map(function(b){return b.dataset.ch});var p=rndPool();rTgt=null;rRes=[];if(!p.length){toast('所选章节没有错题');return}rOrd=p.sort(function(){return Math.random()-.5});rI=0;document.getElementById('rnd-setup').style.display='none';document.getElementById('rand-card').style.display='';loadRnd()}
+function finishRnd(){
+  if(rTgt){RSET();return}
+  var card=document.getElementById('rand-card'),t=rRes.length,ok=0,wi=[],ri=[];
+  rRes.forEach(function(x){if(x.ok){ok++;ri.push(x.id)}else wi.push(x.id)});
+  var acc=t?Math.round(ok/t*100):0,sc=acc>=80?'good':acc<60?'bad':'';
+  var htm='<div class="card"><div class="result"><div class="score '+sc+'">'+acc+'%</div><div style="color:var(--sub)">答对 <strong style="color:var(--succ)">'+ok+'</strong> · 答错 <strong style="color:var(--dang)">'+(t-ok)+'</strong> · 共 '+t+' 题</div><div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn btn-p" onclick="startRnd()">再来一轮</button><button class="btn btn-s" onclick="RSET()">重新选章节</button><button class="btn btn-s" onclick="document.querySelector(\'[data-tab=book]\').click()">去错题本</button></div></div>';
+  var cut=function(s){return s.length>58?s.slice(0,58)+'…':s};
+  if(wi.length)htm+='<h3 style="margin:20px 0 12px;font-size:15px">❌ 答错 '+wi.length+' 题<span class="hint" style="margin-left:8px">仍留在错题本</span></h3><div style="font-size:12.5px;color:var(--sub);line-height:1.95">'+wi.map(function(id){var q=getQ(id);return'<div><strong style="color:var(--text)">'+h(id)+'</strong> '+h(cut(q.question))+'</div>'}).join('')+'</div>';
+  if(ok)htm+='<h3 style="margin:20px 0 12px;font-size:15px">✅ 答对 '+ok+' 题<span class="hint" style="margin-left:8px">勾选表示已掌握，可移出错题本</span></h3><div class="bulk-row"><button class="btn btn-s btn-sm" id="rnd-sa">全选</button><button class="btn btn-d btn-sm" id="rnd-rm">移出错题本</button></div><div style="font-size:12.5px;line-height:2.1">'+ri.map(function(id){var q=getQ(id);return'<label style="display:flex;gap:6px;align-items:flex-start;cursor:pointer"><input type="checkbox" class="rndcb" value="'+h(id)+'" style="margin-top:7px"><span><strong>'+h(id)+'</strong> <span style="color:var(--sub)">'+h(cut(q.question))+'</span></span></label>'}).join('')+'</div>';
+  htm+='<div style="margin-top:20px"><button class="btn btn-s" onclick="RSET()">← 返回选择章节</button></div></div>';
+  card.innerHTML=htm;
+  var sa=document.getElementById('rnd-sa');if(sa)sa.onclick=function(){var cbs=document.querySelectorAll('.rndcb'),all=true;cbs.forEach(function(c){if(!c.checked)all=false});cbs.forEach(function(c){c.checked=!all})};
+  var rm=document.getElementById('rnd-rm');if(rm)rm.onclick=function(){var c=[].slice.call(document.querySelectorAll('.rndcb')).filter(function(x){return x.checked});if(!c.length)return toast('先勾选要移出的题');if(!confirm('把选中的 '+c.length+' 题移出错题本？'))return;c.forEach(function(x){UPD(x.value,{b:false})});toast('已移出 '+c.length+' 题');RSET()};
+}
 
 function OQ(id){SRD(id);document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on')});views.forEach(function(v){v.classList.remove('on')});document.querySelector('[data-tab="random"]').classList.add('on');document.getElementById('v-random').classList.add('on')}
 window.OQ=OQ;
