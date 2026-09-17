@@ -72,6 +72,13 @@ tr:hover td{background:#fafafa}
 .result{text-align:center;padding:20px}.result .score{font-size:52px;font-weight:700;color:var(--pri);margin:8px 0}.result .score.good{color:var(--succ)}.result .score.bad{color:var(--dang)}
 .wrong-q{border-left:3px solid var(--dang);padding:12px 16px;margin:12px 0;background:#fafafa;border-radius:0 8px 8px 0}
 .wrong-q .meta{font-size:11px;color:var(--sub);margin-bottom:4px}.wrong-q .qt{font-weight:500;font-size:13px;margin-bottom:6px;white-space:pre-wrap}.wrong-q .ua{color:var(--dang);font-size:12px}.wrong-q .ca{color:var(--succ);font-size:12px}
+.wrong-q.exq-ok{border-left-color:var(--succ);background:rgba(18,165,148,.05)}
+.wrong-q.exq-ok .ua{color:var(--succ)}
+.exq-opts{display:flex;flex-direction:column;gap:6px;margin:10px 0}
+.exq-opts .opt{cursor:default;pointer-events:none;padding:7px 11px}
+.exq-opts .opt.right{border-color:var(--succ);background:rgba(18,165,148,.09)}
+.exq-mm{margin-top:8px;padding:8px 12px;background:rgba(255,149,0,.08);border-radius:6px;font-size:12px}
+.ex-allq-wrap h3{margin-bottom:4px}
 .wrong-detail{border:1px solid var(--bdr);border-left:4px solid var(--dang);border-radius:0 8px 8px 0;padding:14px 16px;margin:12px 0;background:var(--card)}
 .wd-head{display:flex;gap:10px;align-items:center;margin-bottom:8px}.wd-q{font-weight:500;font-size:14px;line-height:1.6;white-space:pre-wrap;margin-bottom:10px;padding:8px 12px;background:#f9f9fb;border-radius:6px}
 .wd-ans{font-size:13px;margin-bottom:10px;line-height:1.7;padding:8px 12px;background:#f9f9fb;border-radius:6px}.wd-ans .ua{color:var(--dang)}.wd-ans .ca{color:var(--succ)}
@@ -479,7 +486,7 @@ function OQ(id){SRD(id);document.querySelectorAll('.tab').forEach(function(t){t.
 window.OQ=OQ;
 
 function RES(){var card=document.getElementById('exam-setup'),s=LS(),bq=[];QS.forEach(function(q){var r=s[q.id];if(r&&r.b)bq.push(q)});card.innerHTML='<h2>📝 组卷测试</h2><p>从<strong>错题本</strong>（共 '+bq.length+' 题）随机抽取，交卷后批阅</p>'+(bq.length<5?'<p style="color:var(--dang)">⚠ 错题本不足5题</p>':'<div class="setup-opts"><button class="setup-opt" onclick="STM(10,'+bq.length+')"><div class="n">10</div><div class="d">快速测试</div></button><button class="setup-opt" onclick="STM(20,'+bq.length+')"><div class="n">20</div><div class="d">模拟卷</div></button></div>');document.getElementById('exam-card').style.display='none'}
-function STM(n,total){var s=LS(),bq=[];QS.forEach(function(q){var r=s[q.id];if(r&&r.b)bq.push(q)});eSt.ql=bq.slice().sort(function(){return Math.random()-.5}).slice(0,Math.min(n,total));eSt.an=new Array(eSt.ql.length).fill(null);eSt.idx=0;document.getElementById('exam-card').style.display='';loadExQ()}window.STM=STM;
+function STM(n,total){var s=LS(),bq=[];QS.forEach(function(q){var r=s[q.id];if(r&&r.b)bq.push(q)});eSt.ql=bq.slice().sort(function(){return Math.random()-.5}).slice(0,Math.min(n,total));eSt.an=new Array(eSt.ql.length).fill(null);eSt.ok=new Array(eSt.ql.length).fill(null);eSt.idx=0;document.getElementById('exam-card').style.display='';loadExQ()}window.STM=STM;
 function loadExQ(){if(eSt.idx>=eSt.ql.length){finishEx();return}var q=eSt.ql[eSt.idx],card=document.getElementById('exam-card');paintQ(card,q,'ex-opts','ex-fb',true,eSt.idx,eSt.ql.length);
   handleQOpts('ex-opts',q,function(k){eSingle(k)},function(k,slot){eSlot(k,slot)});
   card.insertAdjacentHTML('beforeend','<div class="actions" style="display:flex;gap:10px;margin-top:16px"><button class="btn btn-p" id="ex-next" disabled onclick="exNext()">'+(eSt.idx===eSt.ql.length-1?'交卷 ✓':'下一题 →')+'</button><button class="btn btn-s" onclick="exitEx()">退出</button></div>')}
@@ -495,16 +502,36 @@ function finishEx(){
     var eq=getQ(q.id),ua=(eSt.an[i]||'').toUpperCase().trim(),ca=eq.answer.toUpperCase().trim(),isOk;
     if(isMultiBlank(eq)){var us2=ua.split(''),cs2=ca.split('');isOk=us2.length===cs2.length&&us2.every(function(v,idx){return v===cs2[idx]})}
     else{var del=re('[,，、\\\\s]+');var css=new Set(ca.split(del).filter(Boolean)),uss=new Set(ua.split(del).filter(Boolean));isOk=ca.length>1?(css.size===uss.size&&Array.from(css).every(function(x){return uss.has(x)})):ua===ca}
-    REC(eq.id,isOk);if(isOk)ok++;else wi.push({q:eq,ua:eSt.an[i]});});
+    REC(eq.id,isOk);eSt.ok[i]=isOk;if(isOk)ok++;else wi.push({q:eq,ua:eSt.an[i]});});
   var t=eSt.ql.length,acc=Math.round(ok/t*100),sc=acc>=80?'good':acc<60?'bad':'',r;
-  var htm='<div class="card"><div class="result"><div class="score '+sc+'">'+acc+'%</div><div style="color:var(--sub)">答对 <strong style="color:var(--succ)">'+ok+'</strong> · 答错 <strong style="color:var(--dang)">'+(t-ok)+'</strong> · 共 '+t+' 题</div><div style="margin-top:16px"><button class="btn btn-p" onclick="STM('+t+',0)">再来一套</button></div></div></div>';
+  var htm='<div class="card"><div class="result"><div class="score '+sc+'">'+acc+'%</div><div style="color:var(--sub)">答对 <strong style="color:var(--succ)">'+ok+'</strong> · 答错 <strong style="color:var(--dang)">'+(t-ok)+'</strong> · 共 '+t+' 题</div><div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn btn-p" onclick="STM('+t+',0)">再来一套</button><button class="btn" id="ex-allq-btn" onclick="toggleAllQ()">📄 查看全部题目 ('+t+')</button></div></div></div>';
   if(!wi.length)htm+='<div style="text-align:center;padding:20px;font-size:18px;font-weight:600;color:var(--succ)">🎉 满分！</div>';
   else{htm+='<div class="card"><h3>📋 错题解析（'+wi.length+' 题）</h3>';
     wi.forEach(function(x){var eq=x.q,r=GR(eq.id),mb=isMultiBlank(eq);var uaO,caO,isSeq=false;
       if(mb){var sqs=(eq.question.match(/[①②③④⑤⑥⑦⑧⑨]/g)||[]).length;if(sqs>=2){isSeq=true;uaO=(x.ua||'').split('').map(function(k,s){return'第'+(s+1)+'空 '+k+'.'+(eq.options[k]?h(eq.options[k]):'')}).join('<br>');caO=eq.answer.toUpperCase().split('').map(function(k,s){return'第'+(s+1)+'空 '+k+'.'+(eq.options[k]?h(eq.options[k]):'')}).join('<br>')}else{uaO=(x.ua||'').split('').map(function(k,s){return'第'+(s+1)+'空：'+h(k)+(eq.options[k]?'.'+h(eq.options[k]):'')}).join('<br>');caO=eq.answer.toUpperCase().split('').map(function(k,s){return'第'+(s+1)+'空：'+h(k)+(eq.options[k]?'.'+h(eq.options[k]):'')}).join('<br>')}}else{uaO=(x.ua||'').split('').map(function(k){return h(k)+(eq.options[k]?'.'+h(eq.options[k]):'')}).join(' / ');caO=Array.from(new Set(eq.answer.toUpperCase().split(/[,，、\s]+/).filter(Boolean))).map(function(k){return h(k)+(eq.options[k]?'.'+h(eq.options[k]):'')}).join(' / ')}
       htm+='<div class="wrong-q"><div class="meta">'+h(eq.section)+' · '+h(eq.id)+(mb?' · 多括号':'')+'</div><div class="qt">'+h(eq.question)+'</div><div class="ua">✗ 你的答案：'+h(x.ua||'未作答')+'<br>'+uaO+'</div><div class="ca">✓ 正确答案：'+h(eq.answer)+'<br>'+caO+'</div>'+(r.mm?'<div style="margin-top:8px;padding:8px 12px;background:rgba(255,149,0,.08);border-radius:6px;font-size:12px"><strong>📝 备注：</strong>'+h(r.mm)+'</div>':'')+'</div>';});
     htm+='</div>';}
+  htm+='<div class="card ex-allq-wrap" id="ex-allq" style="display:none">'+exAllQHtml()+'</div>';
   card.innerHTML=htm;}
+function exAllQHtml(){
+  var htm='<h3>📄 本套全部题目（'+eSt.ql.length+' 题）</h3>';
+  eSt.ql.forEach(function(q,i){
+    var eq=getQ(q.id),r=GR(eq.id),ua=eSt.an[i]||'',ok=(eSt.ok&&eSt.ok[i]),mb=isMultiBlank(eq),keys=eq.options?Object.keys(eq.options):[];
+    var ca=(eq.answer||'').toUpperCase();
+    var optsH=keys.length?('<div class="exq-opts">'+keys.map(function(k){return'<div class="opt'+(ca.indexOf(k)>=0?' right':'')+'"><div class="otl">'+k+'</div><div class="ott">'+h(eq.options[k])+'</div></div>'}).join('')+'</div>'):'';
+    htm+='<div class="wrong-q'+(ok?' exq-ok':'')+'"><div class="meta">'+h(eq.section)+' · '+h(eq.id)+(mb?' · 多空/配对':'')+'</div><div class="qt">'+h(eq.question)+'</div>'+optsH+'<div class="ua">'+(ok?'✓':'✗')+' 你的答案：'+h(ua||'未作答')+'</div><div class="ca">✓ 正确答案：'+h(eq.answer)+'</div>'+(r.mm?'<div class="exq-mm"><strong>📝 备注：</strong>'+h(r.mm)+'</div>':'')+'</div>';
+  });
+  return htm;
+}
+function toggleAllQ(){
+  var d=document.getElementById('ex-allq'),b=document.getElementById('ex-allq-btn');
+  if(!d)return;
+  var show=d.style.display==='none';
+  d.style.display=show?'':'none';
+  if(b)b.textContent=show?'📄 收起全部题目 ('+eSt.ql.length+')':'📄 查看全部题目 ('+eSt.ql.length+')';
+  if(show)setTimeout(function(){try{d.scrollIntoView({behavior:'smooth',block:'start'})}catch(e){}},50);
+}
+window.exAllQHtml=exAllQHtml;window.toggleAllQ=toggleAllQ;
 
 function openEditor(qid){var q=getQ(qid),r=GR(qid),keys=Object.keys(q.options).sort(),optsHtml=keys.map(function(k){return'<div style="display:flex;align-items:center;gap:8px"><span style="font-weight:600;width:20px">'+k+'.</span><input id="ed-opt-'+k+'" value="'+h(q.options[k]||'')+'"></div>'}).join(''),mb=isMultiBlank(q);var ovl=document.createElement('div');ovl.className='modal-overlay';ovl.id='editor-ovl';ovl.innerHTML='<div class="modal" style="max-width:700px"><span class="close" onclick="closeEditor()">×</span><h3>✏️ 编辑 '+h(qid)+(mb?' <span class="badge bg-b">🔗 多括号</span>':'')+'</h3><div class="edit-grid"><label>题干</label><textarea id="ed-q">'+h(q.question)+'</textarea><label>选项</label><div class="edit-opts-row">'+optsHtml+'</div><label>答案</label><input id="ed-a" value="'+h(q.answer)+'" placeholder="如 C 或 ABC（多选）或多括号如 BECD"><label>图片</label><div style="display:flex;gap:8px;align-items:center"><label class="btn btn-s btn-sm" style="cursor:pointer">📎 选择图片<input type="file" accept="image/*" id="ed-img-file" style="display:none" onchange="edImgUpload(\''+qid+'\')"></label>'+(r.img?'<img src="'+r.img+'" style="max-height:40px;border-radius:4px;border:1px solid var(--bdr)"><button class="btn btn-d btn-xs" onclick="UPD(\''+qid+'\',{img:\'\'});openEditor(\''+qid+'\')">✕</button>':'')+'</div><label>备注</label><textarea id="ed-mm">'+h(r.mm||'')+'</textarea></div><div class="modal-actions"><button class="btn btn-d btn-sm" onclick="resetEdit(\''+qid+'\')">恢复默认</button><button class="btn btn-s btn-sm" onclick="closeEditor()">取消</button><button class="btn btn-p btn-sm" onclick="saveEdit(\''+qid+'\')">💾 保存</button></div></div>';document.body.appendChild(ovl);ovl.addEventListener('click',function(e){if(e.target===ovl)closeEditor()})}
 function closeEditor(){var ovl=document.getElementById('editor-ovl');if(ovl)ovl.remove()}window.openEditor=openEditor;window.closeEditor=closeEditor;
