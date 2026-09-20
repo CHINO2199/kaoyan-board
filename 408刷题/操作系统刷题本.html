@@ -551,7 +551,7 @@ RAL();
   if(window.__GIST_SYNC__)return;window.__GIST_SYNC__=true;
   var CFG_KEY='github_sync_config';
   var META_KEY=SK+'_meta';
-  var DFLT={token:'',gist:'c839b9e59f07ae83abd5a1bb256821a9',file:''};
+  var DFLT={token:'',gist:'',file:''};/* 隐私：不把 Gist ID 硬编码进公开源码（Secret Gist 有链接即可读）；ID 只存浏览器 localStorage，由用户在配置面板填写 */
   var cfg={token:DFLT.token,gist:DFLT.gist,file:''};
   try{var _r=localStorage.getItem(CFG_KEY);if(_r){var _o=JSON.parse(_r);cfg.token=_o.token||cfg.token;cfg.gist=_o.gist||cfg.gist;cfg.file=_o.file||'';}}catch(e){}
   /* 修复：每科固定各自的云端文件（os-eb3.json / jz-eb3.json / jw-eb3.json），
@@ -586,7 +586,7 @@ RAL();
   }
   // ---- 拉取：云端较新则完全覆盖本地 ----
   function G_pull(){
-    if(!cfg.gist||!cfg.token){if(!cfg.token)setDot('⚪','未配置 Token，点击设置');return Promise.resolve(null);}
+    if(!cfg.gist||!cfg.token){setDot('⚪',!cfg.token?'未配置 Token，点击设置':'未填写 Gist ID，点击设置');return Promise.resolve(null);}
     if(busy)return Promise.resolve(null);busy=true;
     setDot('🟡','同步中…');
     return api('https://api.github.com/gists/'+cfg.gist,'GET')
@@ -635,7 +635,7 @@ RAL();
   }
   // ---- 上传：本地状态覆盖云端 ----
   function G_push(){
-    if(!cfg.gist||!cfg.token){if(!cfg.token)setDot('⚪','未配置 Token，点击设置');return Promise.resolve(null);}
+    if(!cfg.gist||!cfg.token){setDot('⚪',!cfg.token?'未配置 Token，点击设置':'未填写 Gist ID，点击设置');return Promise.resolve(null);}
     if(busy)return Promise.resolve(null);busy=true;
     setDot('🟡','上传中…');
     /*
