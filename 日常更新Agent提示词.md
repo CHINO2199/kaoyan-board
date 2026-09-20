@@ -173,7 +173,17 @@ git push origin main
 | **改计划**（主人明确要求） | 走 `update.upsert_milestone()` 改 `planned_*`，再 `python update.py --encrypt-only`；`daily_log.py` 的 `--allow-plan-change` 只在此时使用 |
 | **同一任务拆新区间**（如每日一题 86–120 题） | 新建里程碑 `m03b`，设 `row: 'm03'`（与主块同行）、`range: '86–120 题'`、`planned_start/end` |
 | **新建一个任务** | `update.upsert_milestone({id,title,subject,planned_start,planned_end})`，保留默认 `days: {}` |
+| **删除一个任务**（整行删除） | ⚠️ `upsert_milestone` **只做新增/更新，不能删除**。正确做法：按 id 从 `data.json` 的 `milestones` 里剔除 → 写回明文 → `python update.py --encrypt-only`。删前先断言命中的 id 与预期一致（防止误删） |
 | **只看不改** | `python update.py --verify`（解密 data.enc 打印摘要） |
+
+### 改计划后的两个行为（已验证，别误判为 bug）
+
+- **新建任务不会凭空出现实条**：`realDays()` 里 `start = actual_start || days 里最早的日期 || null`，
+  为空就直接不画条。所以「今天开始的新任务」当天只显示紫虚线计划框 + 状态「未启动」，
+  **不会**因为「计划覆盖今天却没记录」而画成红条（红条只出现在 `days` 有 `0` 的日期）。
+- **`meta.updated_at` 只写进密文**：`update.do_encrypt()` 里显式说明「只进密文，不回写 `data.json`」，
+  所以本地 `data.json` 的 `meta.updated_at` 看起来永远是旧的 —— 这是设计如此，
+  前端读到的是密文里的新时间，不要拿它当「没更新」的证据。
 
 ---
 
