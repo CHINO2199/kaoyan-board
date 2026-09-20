@@ -674,6 +674,9 @@ RAL();
   // ---- UI ----
   function ensureUI(){
     if(!dot){
+      dot=document.getElementById('gdot');   /* 复用 HTML 里已有的状态点，避免顶栏出现两个点 */
+    }
+    if(!dot){
       var tabs=document.getElementById('tabs');
       if(tabs){
         var sp=document.createElement('span');
@@ -713,8 +716,10 @@ RAL();
         msg.textContent='已保存，正在同步…';
         setDot('🟡','同步中…');
         G_pull().then(function(){return G_push();}).then(function(v){
-          if(v){setDot('🟢','已同步 '+new Date().toLocaleTimeString());msg.textContent='✓ 同步完成';}
-          else{msg.textContent='✓ 同步完成（无变化）';}
+          var _dotTxt=(dot&&dot.textContent)||'';var _err=(dot&&dot.title)||'未知原因';
+          if(_dotTxt==='🟢'){msg.textContent='✓ 同步完成';msg.style.color='';}
+          else if(!cfg.gist){msg.textContent='✗ 未填写 Gist ID';msg.style.color='var(--dang)';}
+          else{msg.textContent='✗ 同步失败：'+_err;msg.style.color='var(--dang)';}
         });
       };
     }
