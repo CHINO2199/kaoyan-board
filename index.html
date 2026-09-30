@@ -1380,7 +1380,7 @@ html[data-theme="dark"] .shelf-board{background:linear-gradient(180deg,#4A2038,#
                 <div v-for="row in ganttRows" :key="row.key" class="gt-row">
                   <div class="gt-name">
                     <div class="t" :title="row.main.title">
-                      <span class="breath-static" :style="{background:subjColor(row.main.subject)}"></span>
+                      <span v-if="row.main.title" class="breath-static" :style="{background:subjColor(row.main.subject)}"></span>
                       {{ row.main.title }}
                     </div>
                     <div class="s" v-if="row.main.title">
