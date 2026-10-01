@@ -2745,8 +2745,8 @@ function bootApp() {
           const r = this.dayRec(ms, iso);
           let kind;
           if (r === 1) kind = (ms.planned_end && iso > ms.planned_end) ? 'ext' : 'done';
-          else if (r === 0) kind = 'miss';
-          else kind = (iso === this.todayISO) ? 'todo' : 'miss'; // 未记录 = 没做（今天除外，今天还没结束）
+          else if (r === 0) kind = 'miss';   // 只有「显式标为没做」才画红
+          else continue;                     // 未记录 → 不画条（2026-10-01 起：未完成不标红）
           out.push({ iso, kind });
         }
         return out;
@@ -2783,6 +2783,12 @@ function bootApp() {
           ['状态', LABEL[seg.kind]],
           ['累计', '完成 ' + st.done + ' 天 · 没做 ' + st.miss + ' 天' + (st.ext ? ' · 超期补做 ' + st.ext + ' 天' : '')]
         ];
+        /* 实际完成日期：计划日 X 于 实际日 Y 完成（例如 10-01 的份额在 10-02 做完）*/
+        const dOn = ms.done_on || {};
+        const lateDone = Object.keys(dOn)
+          .filter(d => d >= seg.start && d <= seg.end && dOn[d] !== d)
+          .sort().map(d => d.slice(5) + ' 于 ' + String(dOn[d]).slice(5) + ' 完成');
+        if (lateDone.length) rows.push(['完成于', lateDone.join(' · ')]);
         if (ms.planned_end && seg.kind === 'ext') {
           rows.push(['超出计划', diffDays(seg.end, ms.planned_end) + ' 天']);
         }

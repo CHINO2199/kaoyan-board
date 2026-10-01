@@ -37,7 +37,12 @@ spec（JSON）字段
   reflection    "…"                 复盘
   tomorrow_plan ["…"]               明日计划
   done          ["m07"]             当天**做**了的任务：id / 标题子串 / range
-  skip          ["m05"]             可选：计划覆盖当天但**不写记录**（保持无条）
+  skip          ["m05"]             可选：计划覆盖当天但**不写记录**（保持无条，默认行为已是这样）
+  miss          ["m05"]             可选：**显式**标为「当天没做」（写 0 → 红条；默认不写 0）
+  done_plan_dates {"m32": ["2026-10-01"]}  可选：把完成的蓝标在指定的**计划日**上
+                                   并自动记 `done_on[计划日] = 本次记录日`（实际完成日）
+  ★ 2026-10-01 起的新规矩：未完成/未记录**什么都不写**（不再自动写 0 = 不画红条）；
+    完成的蓝条画在「计划日」而不是「记录日」；跨天补做要在 done_plan_dates 里点明计划日。
   progress      {"m07": 20}         可选：顺带更新进度百分比
 """
 
@@ -223,26 +228,46 @@ def build(spec: dict, data: dict, allow_plan_change=False):
     # ---- 2) 里程碑 days[当天] ----
     done_hit, miss_tokens = match_tasks(ms, spec.get("done"))
     skip_hit, _ = match_tasks(ms, spec.get("skip"))
+    miss_hit, _ = match_tasks(ms, spec.get("miss"))
+    dpd = spec.get("done_plan_dates") or {}          # {任务 id: [计划日, ...]}
     rows, touched = [], set()
     for m in ms:
         mid = m.get("id")
         flag = None
-        if mid in done_hit:
+        wrote = False
+        if mid in dpd:
+            # 新规矩：把蓝标打在指定的**计划日**上，并记下实际完成日（本次记录日）
+            marks = sorted(set(dpd[mid]))
+            for pd in marks:
+                m.setdefault("days", {})[pd] = 1
+                if pd != day:
+                    m.setdefault("done_on", {})[pd] = day      # 计划日 → 实际完成日
+                if not m.get("actual_start") or m["actual_start"] > pd:
+                    m["actual_start"] = pd
+                m["actual_end"] = None
+            touched.add(mid)
+            wrote = True
+            late = [x for x in marks if x != day]
+            flag, why = 1, ("完成（计划日 " + "、".join(marks)
+                            + (("；实际 " + day + " 完成") if late else "") + "）")
+        elif mid in done_hit:
             flag, why = 1, "完成"
+        elif mid in miss_hit:
+            flag, why = 0, "显式标为没做 → 红"
         elif mid in skip_hit:
             flag, why = None, "跳过（不写）"
         elif plan_covers(m, day):
-            flag, why = 0, "计划覆盖当天 → 没做"
+            flag, why = None, "未完成 → 不写（新规矩：不标红）"
         else:
             flag, why = None, "计划未覆盖 → 不写"
-        if flag is not None:
+        if flag is not None and not wrote:
             m.setdefault("days", {})[day] = flag     # ★ 合并写入，绝不整体替换 days
             touched.add(mid)
-            if flag == 1:
-                if not m.get("actual_start") or m["actual_start"] > day:
-                    m["actual_start"] = day
-                if not m.get("actual_end") or m["actual_end"] < day:
-                    m["actual_end"] = None        # 进行中：结束日留空
+        if flag == 1 and not mid in dpd:             # 按记录日打标时，才需要维护 actual_start
+            if not m.get("actual_start") or m["actual_start"] > day:
+                m["actual_start"] = day
+            if not m.get("actual_end") or m["actual_end"] < day:
+                m["actual_end"] = None        # 进行中：结束日留空
         rows.append((mid, m.get("subject"), m.get("title"), m.get("range"),
                      m.get("planned_start"), m.get("planned_end"), flag, why))
 
