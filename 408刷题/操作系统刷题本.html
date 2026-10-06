@@ -92,7 +92,7 @@ tr:hover td{background:#fafafa}
 .memo-inline{width:100%;min-height:26px;border:1px solid transparent;border-radius:4px;padding:2px 6px;font-size:11px;font-family:inherit;background:transparent;color:var(--sub);resize:vertical;transition:.12s}.memo-inline:hover{border-color:var(--bdr)}.memo-inline:focus{border-color:var(--pri);outline:none;background:var(--card);color:var(--text)}.memo-inline.has-text{border-color:var(--warn);color:var(--text)}
 .toast{position:fixed;top:18px;right:18px;background:#1d1d1f;color:#fff;padding:12px 20px;border-radius:8px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:300;animation:slideIn .25s}
 @keyframes slideIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
-.bulk-row{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}.bulk-row span{font-size:12px;color:var(--sub)}.rtag-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1px dashed var(--bdr)}.rtag-lbl{font-size:12px;color:var(--sub);margin-right:2px}.rtag{font-size:12px;padding:7px 14px;border:1px dashed var(--bdr);border-radius:20px;cursor:pointer;background:var(--card);font-family:inherit;transition:.12s;color:var(--sub)}.rtag:hover{border-color:var(--pri);color:var(--pri)}.rtag.on{background:var(--pri);color:#fff;border:1px solid var(--pri);font-weight:600}.rtag.on::before{content:"✓ ";font-weight:700}.rtag-row.armed .rtag-lbl{color:var(--pri);font-weight:600}.rtag-hint{font-size:11.5px;color:var(--pri)}.rtag-tip{font-size:11.5px;color:var(--sub);margin-top:8px}
+.bulk-row{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}.bulk-row span{font-size:12px;color:var(--sub)}.rtag-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1px dashed var(--bdr)}.rtag-lbl{font-size:12px;color:var(--sub);margin-right:2px}.rtag{font-size:12px;padding:7px 14px;border:1px dashed var(--bdr);border-radius:20px;cursor:pointer;background:var(--card);font-family:inherit;transition:.12s;color:var(--sub)}.rtag:hover{border-color:var(--pri);color:var(--pri)}.rtag.on{background:var(--pri);color:#fff;border:1px solid var(--pri);font-weight:600}.rtag.on::before{content:"✓ ";font-weight:700}.rtag-row.armed .rtag-lbl{color:var(--pri);font-weight:600}.rtag-hint{font-size:11.5px;color:var(--pri)}.rtag-tip{font-size:11.5px;color:var(--sub);margin-top:8px}.badge.days{background:var(--pri-lt);color:var(--pri);border:1px solid var(--pri);font-weight:600}
 .empty{text-align:center;padding:60px 20px;color:var(--sub)}.empty .ico{font-size:42px;margin-bottom:14px;opacity:.4}
 .edit-grid{display:grid;grid-template-columns:1fr;gap:12px}.edit-grid label{font-weight:600;font-size:12px;color:var(--sub);margin-bottom:-8px}
 .edit-grid input,.edit-grid textarea{width:100%;padding:10px 12px;border:1px solid var(--bdr);border-radius:6px;font-size:13px;font-family:inherit;background:var(--card);color:var(--text)}.edit-grid textarea{min-height:60px;resize:vertical}.edit-grid input:focus,.edit-grid textarea:focus{border-color:var(--pri);outline:none}
@@ -262,8 +262,11 @@ function LS(){try{var r=localStorage.getItem(SK);return r?JSON.parse(r):{}}catch
 function SS(s){localStorage.setItem(SK,JSON.stringify(s))}
 function GR(id){var s=LS();return s[id]||{a:0,w:0,l:false,b:false,img:'',mm:''}}
 function REC(id,ok){var s=LS();if(!s[id])s[id]={a:0,w:0,l:false,b:false,img:'',mm:''};s[id].a++;if(!ok)s[id].w++;s[id].l=!ok;SS(s)}
+function RECd(id,ok){var s=LS();if(!s[id])s[id]={a:0,w:0,l:false,b:false,img:'',mm:''};if(ok){s[id].l=false}else{s[id].w++;s[id].l=true;s[id].d=today();s[id].b=true}SS(s)}
 function RECADJ(id,ok){var s=LS();if(!s[id])s[id]={a:0,w:0,l:false,b:false,img:'',mm:''};if(ok){s[id].w=Math.max(0,s[id].w-1)}else{s[id].w++}s[id].l=!ok;SS(s)}
+function RECADJd(id,ok){var s=LS();if(!s[id])s[id]={a:0,w:0,l:false,b:false,img:'',mm:''};if(ok){s[id].l=false}else{s[id].w++;s[id].l=true;s[id].d=today();s[id].b=true}SS(s)}
 function UPD(id,upd){var s=LS();if(!s[id])s[id]={a:0,w:0,l:false,b:false,img:'',mm:''};Object.assign(s[id],upd);SS(s)}
+function UPDd(id,upd){UPD(id,upd);var s=LS();if(s[id]){if(s[id].l){s[id].d=today()}else if(s[id].d){s[id].d=''}}SS(s)}
 function loadEdits(){try{var r=localStorage.getItem(EK);return r?JSON.parse(r):{}}catch(e){return{}}}
 function saveEdits(ed){localStorage.setItem(EK,JSON.stringify(ed))}
 function getQ(id){
@@ -296,7 +299,7 @@ tabs.forEach(function(t){t.addEventListener('click',function(){
   if(v==='all')RAL();else if(v==='book')RBK();else if(v==='chapter')RCS();else if(v==='random')RSET();else if(v==='exam')RES();else if(v==='dash')RDASH();
 })});
 
-var SKY='accuracy',SDI='asc',BSK='accuracy-b',BSD='asc',rOrd=[],rI=0,rCur=null,rTgt=null,rSelCh=[],rRes=[];
+var SKY='accuracy',SDI='asc',BSK='accuracy-b',BSD='asc',rOrd=[],rI=0,rCur=null,rTgt=null,rSelCh=[],rRes=[],rMode='random',rEdit=false,rTs=[];
 var RPREF='RPREF',rSort=[];// 随机刷题排序标签：默认都不选（= 纯随机洗牌），按此顺序加权（可同时选中）
 function rSortLoad(){try{var v=JSON.parse(localStorage.getItem(RPREF));rSort=Array.isArray(v)?v.filter(function(k){return k==='accuracy'||k==='attempts'}):[]}catch(e){rSort=[]}}
 function rSortSave(){try{localStorage.setItem(RPREF,JSON.stringify(rSort))}catch(e){}}
@@ -411,7 +414,7 @@ function paintQ(card,q,optsId,fbId,sp,idx,total){
   }else{
     optsHtml='<div class="opts"><div class="opt lock"><div class="ott" style="color:var(--sub)">（此题无标准选项）</div></div></div>';
   }
-  card.innerHTML='<div class="qhead"><div class="qmeta"><span class="ctag">'+h(eq.section)+'</span><span class="ntag">'+h(eq.id)+'</span>'+(multi?'<span class="badge bg-b">🔗 '+(mbType==='seq'?sqCount+'空':'配对')+'</span>':'')+(r.a?'<span class="badge '+(r.w?'bg-r':'bg-g')+'">刷'+r.a+'次'+(r.w?'错'+r.w:'')+'</span>':'')+'</div>'+headH+'</div>'+progH+'<div class="qtext">'+h(eq.question)+'</div>'+(r.img?'<div class="qimage"><img src="'+r.img+'"></div>':'')+optsHtml+'<div id="'+fbId+'"></div>';
+  card.innerHTML='<div class="qhead"><div class="qmeta"><span class="ctag">'+h(eq.section)+'</span><span class="ntag">'+h(eq.id)+'</span>'+(multi?'<span class="badge bg-b">🔗 '+(mbType==='seq'?sqCount+'空':'配对')+'</span>':'')+(r.a?'<span class="badge '+(r.w?'bg-r':'bg-g')+'">刷'+r.a+'次'+(r.w?'错'+r.w:'')+'</span>':'')+(rMode==='recent'&&r.d?'<span class="badge days">🕒 '+agoTxt(r.d)+'</span>':'')+'</div>'+headH+'</div>'+progH+'<div class="qtext">'+h(eq.question)+'</div>'+(r.img?'<div class="qimage"><img src="'+r.img+'"></div>':'')+optsHtml+'<div id="'+fbId+'"></div>';
 }
 
 function RCS(){
@@ -455,6 +458,26 @@ function settleImg(i){var f=i.files[0];if(!f)return;uploadImg(i.dataset.qid,f,'a
 function stDelImg(qid){if(!confirm('删除图片？'))return;UPD(qid,{img:''});finishCh()}
 window.addSt=addSt;window.settleImg=settleImg;window.stDelImg=stDelImg;
 
+// ── 最近错题（刷最近错题模式用）──────────────────────────────────────────
+// 每次答错都会给该题盖上当天日期（r.d），"刷最近错题"就按它倒序取题。
+function today(){var dd=new Date();return dd.getFullYear()+'-'+String(dd.getMonth()+1).padStart(2,'0')+'-'+String(dd.getDate()).padStart(2,'0')}
+function dateStr(v){if(v==null)return'';if(typeof v==='string')return v.slice(0,10);if(typeof v==='number')return new Date(v).toISOString().slice(0,10);return''}
+function ltad(a,b){var x=dateStr(a),y=dateStr(b);if(x===y)return 0;if(!x)return 1;if(!y)return -1;return x<y?1:-1}// 日期倒序：有日期的在前，无日期的垫底
+function rPad(id){var s=LS(),r=s[id]||{};return{id:id,ts:dateStr(r.d)}}// 只读，不写回
+function recentWrong(){
+  var s=LS(),rows=[];
+  QS.forEach(function(q){var r=s[q.id];if(r&&r.b&&r.l)rows.push(rPad(q.id))});
+  rows.sort(function(x,y){return ltad(x.ts,y.ts)});
+  // 同一天（含都没日期）内部随机：先洗牌再稳定排序，保证同一日期段内每天都换顺序
+  rows.sort(function(){return Math.random()-.5});
+  return rows.sort(function(x,y){return ltad(x.ts,y.ts)});
+}
+function rndBtn(){var b=document.getElementById('rnd-recent');if(!b)return;var c=recentWrong().length;b.disabled=!c;b.title=c?('刷最近错的 '+c+' 题（最多 50）'):'错题本里还没有答错过的题'}
+function daysAgo(v){var ds=dateStr(v);if(!ds)return null;
+  function pd(x){var p=String(x).split('-');return new Date(+p[0],+p[1]-1,+p[2],12,0,0)}
+  var a=pd(ds),b=pd(today()),n=Math.round((b-a)/86400000);
+  return isNaN(n)?null:Math.max(0,n)}
+function agoTxt(v){var n=daysAgo(v);if(n===null)return'日期未知';if(n===0)return'今天刷错';if(n===1)return'昨天刷错';return n+' 天前刷错'}
 function rndPool(){var s=LS(),p=[];QS.forEach(function(q){var r=s[q.id];if(!r||!r.b)return;if(rSelCh.length&&rSelCh.indexOf(q.section)<0)return;p.push(q.id)});return p}
 function rndBookCnt(){var s=LS(),m={};QS.forEach(function(q){var r=s[q.id];if(r&&r.b)m[q.section]=(m[q.section]||0)+1});return m}
 function rndCnt(){var sel=[].slice.call(document.querySelectorAll('#rnd-sel .rch.on'));rSelCh=sel.map(function(b){return b.dataset.ch});var cs=rndBookCnt(),n=0;rSelCh.forEach(function(c){n+=cs[c]||0});
@@ -463,14 +486,14 @@ function rndCnt(){var sel=[].slice.call(document.querySelectorAll('#rnd-sel .rch
   var sl=document.getElementById('rnd-sort');if(sl)sl.classList.toggle('armed',sv.length>0);
   var el=document.getElementById('rnd-cnt');if(el)el.textContent=rSelCh.length?('已选 '+rSelCh.length+' 章 · 共 '+n+' 题'):'请至少选择 1 个章节';
   var hint=document.getElementById('rnd-sorthint');if(hint)hint.textContent=sv.length?'✓ 已启用：按「'+(sv[0]==='accuracy'?'正确率低':'刷题次数少')+'」优先'+(sv.length>1?'（'+rSort.join(' → ')+'）':''):'未启用 · 纯随机洗牌';
-  var st=document.getElementById('rnd-start');if(st)st.disabled=!n}
+  var st=document.getElementById('rnd-start');if(st)st.disabled=!n;rndBtn()}
 function RSET(){
   var su=document.getElementById('rnd-setup'),card=document.getElementById('rand-card');
   card.style.display='none';su.style.display='';
   rSortLoad();
   var cnt=rndBookCnt(),chs=[];QS.forEach(function(q){if(chs.indexOf(q.section)<0)chs.push(q.section)});chs.sort();
   var tot=0;Object.keys(cnt).forEach(function(k){tot+=cnt[k]});
-  if(!tot){su.innerHTML='<div class="empty"><div class="ico">📌</div><p>错题本为空</p><p style="font-size:12px;margin-top:8px">先去「全部题库」或「章节顺序刷题」刷些题，或在题目里加入错题本</p></div>';return}
+  if(!tot){su.innerHTML='<div class="empty"><div class="ico">📌</div><p>错题本为空</p><p style="font-size:12px;margin-top:8px">先去「全部题库」或「章节顺序刷题」刷些题，或在题目里加入错题本</p></div><div style="margin-top:14px"><button class="btn btn-s" id="rnd-recent" title="错题本里还没有答错过的题">🕒 刷最近错题</button></div>';rndBtn();return}
   var htm='<h3 style="margin-bottom:6px">选择章节<span class="hint" style="margin-left:8px">随机刷所选章节里的错题</span></h3>'
    +'<div class="bulk-row" style="margin-top:14px"><button class="btn btn-s btn-sm" id="rnd-all">全选</button><button class="btn btn-s btn-sm" id="rnd-none">清空</button><button class="btn btn-s btn-sm" id="rnd-inv">反选</button><span id="rnd-cnt"></span></div>'
    +'<div class="ch-sel" id="rnd-sel">'+chs.map(function(c){var n=cnt[c]||0;return'<button class="rch'+(n&&rSelCh.indexOf(c)>=0?' on':'')+'" data-ch="'+h(c)+'"'+(n?'':' disabled')+'>'+h(c)+'<b>'+n+'</b></button>'}).join('')+'</div>'
@@ -479,7 +502,7 @@ function RSET(){
    +'<button class="rtag'+(rSort.indexOf('attempts')>=0?' on':'')+'" data-k="attempts" title="生题先出：按刷题次数从少到多">🆕 刷题次数少优先</button>'
    +'<span class="rtag-hint" id="rnd-sorthint"></span></div>'
    +'<p class="rtag-tip">两个标签可同时选中（按从左到右的优先级加权）；不选=纯随机。改标签后点「开始刷题」生效。</p>'
-   +'<div style="margin-top:14px"><p style="color:var(--sub);font-size:13px;margin-bottom:12px">刷完后弹出结算卡片，答对的题可手动勾选移出错题本</p><button class="btn btn-p" id="rnd-start" disabled>开始刷题</button></div>';
+   +'<div style="margin-top:14px"><p style="color:var(--sub);font-size:13px;margin-bottom:12px">刷完后弹出结算卡片，答对的题可手动勾选移出错题本</p><button class="btn btn-p" id="rnd-start" disabled>开始刷题</button><button class="btn btn-s" id="rnd-recent" title="刷最近错的题（最多 50）">🕒 刷最近错题</button></div>';
   su.innerHTML=htm;
   document.querySelectorAll('#rnd-sel .rch').forEach(function(b){b.addEventListener('click',function(){if(this.disabled)return;this.classList.toggle('on');rndCnt()})});
   document.querySelectorAll('#rnd-sort .rtag').forEach(function(b){b.addEventListener('click',function(){var k=this.dataset.k,i=rSort.indexOf(k);if(i>=0)rSort.splice(i,1);else rSort.push(k);rSortSave();rndCnt()})});
@@ -487,36 +510,70 @@ function RSET(){
   document.getElementById('rnd-none').onclick=function(){document.querySelectorAll('#rnd-sel .rch').forEach(function(b){b.classList.remove('on')});rndCnt()};
   document.getElementById('rnd-inv').onclick=function(){document.querySelectorAll('#rnd-sel .rch:not([disabled])').forEach(function(b){b.classList.toggle('on')});rndCnt()};
   document.getElementById('rnd-start').onclick=startRnd;
+  document.getElementById('rnd-recent').onclick=startRecent;
   rndCnt();
 }
 function SRD(tgtId){rTgt=tgtId||null;rRes=[];if(tgtId){rOrd=[tgtId]}else{var p=rndPool();if(!p.length){document.getElementById('rnd-setup').style.display='none';var c0=document.getElementById('rand-card');c0.style.display='';c0.innerHTML='<div class="empty"><div class="ico">📌</div><p>错题本为空</p></div>';return}rOrd=rPond(p)}rI=0;document.getElementById('rnd-setup').style.display='none';document.getElementById('rand-card').style.display='';loadRnd()}
 function loadRnd(){if(rI>=rOrd.length){finishRnd();return}var q=QS.find(function(x){return x.id===rOrd[rI]});if(!q){finishRnd();return}rCur={q:q,ua:null,rec:null};var card=document.getElementById('rand-card');paintQ(card,q,'r-opts','r-fb',!rTgt,rI,rOrd.length);
+  if(rMode==='recent')card.insertAdjacentHTML('beforeend','<div class="rtag-tip">🕒 最近错题模式：答对不计分（不影响正确率，也不会移出错题本），答错照常记为错</div>');
   handleQOpts('r-opts',q,function(k){rSingle(k)},function(k,slot){rSlot(k,slot)});
-  card.insertAdjacentHTML('beforeend','<div class="actions" style="display:flex;gap:10px;margin-top:16px"><button class="btn btn-p" onclick="rNext()">'+(rI===rOrd.length-1?'完成 ✓':'下一题 →')+'</button><button class="btn btn-s" onclick="RSET()">重新选章节</button></div>')}
-function rSingle(k){if(!rCur)return;var q=getQ(rCur.q.id),ca=q.answer.toUpperCase().trim(),del=re('[,，、\\\\s]+'),cs=new Set(ca.split(del).filter(Boolean)),mu=cs.size>1;if(!mu){document.querySelectorAll('#r-opts .opt').forEach(function(o){o.classList.remove('sel')});document.querySelector('.opt[data-k="'+k+'"]').classList.add('sel')}else{document.querySelector('.opt[data-k="'+k+'"]').classList.toggle('sel')}var arr=Array.from(document.querySelectorAll('#r-opts .opt.sel')).map(function(o){return o.dataset.k});if(!arr.length)return;rCur.ua=arr.join('');var us=new Set(arr.map(function(x){return x.toUpperCase()}));var ok=cs.size>1?(cs.size===us.size&&Array.from(cs).every(function(x){return us.has(x)})):(us.size===1&&cs.has(Array.from(us)[0]));if(!rCur.rec){REC(q.id,ok);rCur.rec={ok:ok}}else if(rCur.rec.ok!==ok){RECADJ(q.id,ok);rCur.rec.ok=ok}renderRFb(q,ok,arr)}
-function rSlot(k,slot){if(!rCur)return;var q=getQ(rCur.q.id),ca=q.answer.toUpperCase().trim(),cs2=ca.split('');document.querySelectorAll('#r-opts .opt[data-slot="'+slot+'"]').forEach(function(o){o.classList.remove('sel')});document.querySelector('.opt[data-k="'+k+'"][data-slot="'+slot+'"]').classList.add('sel');var grps=document.querySelectorAll('#r-opts .slot-group'),arr=[],allDone=true;grps.forEach(function(sg){var s=sg.querySelector('.opt.sel');if(s)arr.push(s.dataset.k);else allDone=false});if(!allDone)return;rCur.ua=arr.join('');var ok=arr.every(function(v,idx){return v.toUpperCase()===cs2[idx]});if(!rCur.rec){REC(q.id,ok);rCur.rec={ok:ok}}else if(rCur.rec.ok!==ok){RECADJ(q.id,ok);rCur.rec.ok=ok}renderRFbSlot(q,ok,arr,cs2)}
+  card.insertAdjacentHTML('beforeend','<div class="actions" style="display:flex;gap:10px;margin-top:16px"><button class="btn btn-p" onclick="rNext()">'+(rI===rOrd.length-1?'完成 ✓':'下一题 →')+'</button><button class="btn btn-s" onclick="'+(rMode==='recent'?'startRecent()':'RSET()')+'">'+(rMode==='recent'?'再做一遍':'重新选章节')+'</button></div>')}
+function rSingle(k){if(!rCur)return;var q=getQ(rCur.q.id),ca=q.answer.toUpperCase().trim(),del=re('[,，、\\\\s]+'),cs=new Set(ca.split(del).filter(Boolean)),mu=cs.size>1;if(!mu){document.querySelectorAll('#r-opts .opt').forEach(function(o){o.classList.remove('sel')});document.querySelector('.opt[data-k="'+k+'"]').classList.add('sel')}else{document.querySelector('.opt[data-k="'+k+'"]').classList.toggle('sel')}var arr=Array.from(document.querySelectorAll('#r-opts .opt.sel')).map(function(o){return o.dataset.k});if(!arr.length)return;rCur.ua=arr.join('');var us=new Set(arr.map(function(x){return x.toUpperCase()}));var ok=cs.size>1?(cs.size===us.size&&Array.from(cs).every(function(x){return us.has(x)})):(us.size===1&&cs.has(Array.from(us)[0]));if(!rCur.rec){if(rMode==='recent'){rCur.edit=!!GR(q.id).l;RECd(q.id,ok)}else{REC(q.id,ok)}rCur.rec={ok:ok,pre:rCur.edit}}
+else if(rCur.rec.ok!==ok){if(rMode==='recent'){RECADJd(q.id,rCur.rec.pre?ok:true)}else{RECADJ(q.id,ok)}rCur.rec.ok=ok}renderRFb(q,ok,arr)}
+function rSlot(k,slot){if(!rCur)return;var q=getQ(rCur.q.id),ca=q.answer.toUpperCase().trim(),cs2=ca.split('');document.querySelectorAll('#r-opts .opt[data-slot="'+slot+'"]').forEach(function(o){o.classList.remove('sel')});document.querySelector('.opt[data-k="'+k+'"][data-slot="'+slot+'"]').classList.add('sel');var grps=document.querySelectorAll('#r-opts .slot-group'),arr=[],allDone=true;grps.forEach(function(sg){var s=sg.querySelector('.opt.sel');if(s)arr.push(s.dataset.k);else allDone=false});if(!allDone)return;rCur.ua=arr.join('');var ok=arr.every(function(v,idx){return v.toUpperCase()===cs2[idx]});if(!rCur.rec){if(rMode==='recent'){rCur.edit=!!GR(q.id).l;RECd(q.id,ok)}else{REC(q.id,ok)}rCur.rec={ok:ok,pre:rCur.edit}}
+else if(rCur.rec.ok!==ok){if(rMode==='recent'){RECADJd(q.id,rCur.rec.pre?ok:true)}else{RECADJ(q.id,ok)}rCur.rec.ok=ok}renderRFbSlot(q,ok,arr,cs2)}
 function renderRFb(q,ok,arr){var r=GR(q.id),fb=document.getElementById('r-fb');document.querySelectorAll('#r-opts .opt').forEach(function(o){o.classList.remove('ok','no');var kk=o.dataset.k.toUpperCase();var ca=q.answer.toUpperCase(),del=re('[,，、\\\\s]+'),cs=new Set(ca.split(del).filter(Boolean));if(cs.has(kk))o.classList.add('ok')});if(!ok){arr.forEach(function(k2){document.querySelector('#r-opts .opt[data-k="'+k2+'"]').classList.add('no')})}
   var uaT=arr.map(function(k2){return h(k2)+'.'+h(q.options[k2]||'')}).join(' / '),caT=Array.from(new Set(q.answer.toUpperCase().split(/[,，、\s]+/).filter(Boolean))).map(function(k2){return h(k2)+'.'+(q.options[k2]?h(q.options[k2]):'')}).join(' / ');
-  fb.innerHTML='<div class="fb '+(ok?'ok':'no')+'"><div class="fbt '+(ok?'ok':'no')+'">'+(ok?'✓ 回答正确！':'✗ 回答错误')+'</div><div class="fbl"><strong>完整题目：</strong>'+h(q.question)+'</div><div class="fbl">你的选择：<span class="clr-no">'+h(rCur.ua)+'. '+uaT+'</span></div><div class="fbl">正确答案：<span class="clr-ok">'+h(q.answer)+'. '+caT+'</span></div>'+(r.mm?'<div class="fb-memo"><div class="memo-title">📝 备注</div>'+h(r.mm)+'</div>':'')+'<div class="fb-ref">来源：'+h(q.section)+' 第 '+q.number+' 题</div></div>';fb.scrollIntoView({behavior:'smooth',block:'center'})}
+  fb.innerHTML='<div class="fb '+(ok?'ok':'no')+'"><div class="fbt '+(ok?'ok':'no')+'">'+(ok?'✓ 回答正确！':'✗ 回答错误')+'</div><div class="fbl"><strong>完整题目：</strong>'+h(q.question)+'</div><div class="fbl">你的选择：<span class="clr-no">'+h(rCur.ua)+'. '+uaT+'</span></div><div class="fbl">正确答案：<span class="clr-ok">'+h(q.answer)+'. '+caT+'</span></div>'+(r.mm?'<div class="fb-memo"><div class="memo-title">📝 备注</div>'+h(r.mm)+'</div>':'')+'<div class="fb-ref">来源：'+h(q.section)+' 第 '+q.number+' 题'+(rMode==='recent'?(ok?' · 🕒 最近错题：答对不计分':' · 🕒 最近错题：已记为错'):'')+'</div></div>';fb.scrollIntoView({behavior:'smooth',block:'center'})}
 function renderRFbSlot(q,ok,arr,cs2){var r=GR(q.id),fb=document.getElementById('r-fb');document.querySelectorAll('#r-opts .opt').forEach(function(o){o.classList.remove('ok','no');var idx=parseInt(o.dataset.slot);if(cs2[idx]===o.dataset.k.toUpperCase())o.classList.add('ok');if(arr[idx]===o.dataset.k&&!ok)o.classList.add('no')});
   var fbS='';arr.forEach(function(p,idx){var o2=p.toUpperCase()===cs2[idx];fbS+='<div class="fb-slot"><span class="sn">'+(idx+1)+'</span><div style="flex:1"><div>你的选择：<span class="clr-no">'+h(p)+'.'+(q.options[p]?h(q.options[p]):'')+'</span></div><div>正确答案：<span class="clr-ok">'+h(cs2[idx])+'.'+(q.options[cs2[idx]]?h(q.options[cs2[idx]]):'')+'</span></div></div></div>';});
-  fb.innerHTML='<div class="fb '+(ok?'ok':'no')+'"><div class="fbt '+(ok?'ok':'no')+'">'+(ok?'✓ 回答正确！':'✗ 回答错误')+'</div><div class="fbl"><strong>完整题目：</strong>'+h(q.question)+'</div>'+fbS+'<div class="fbl"><strong>你的答案：</strong>'+h(rCur.ua)+' <strong>正确答案：</strong>'+h(q.answer)+'</div>'+(r.mm?'<div class="fb-memo"><div class="memo-title">📝 备注</div>'+h(r.mm)+'</div>':'')+'<div class="fb-ref">来源：'+h(q.section)+' 第 '+q.number+' 题 · 🔗 按位置配对</div></div>';fb.scrollIntoView({behavior:'smooth',block:'center'})}
+  fb.innerHTML='<div class="fb '+(ok?'ok':'no')+'"><div class="fbt '+(ok?'ok':'no')+'">'+(ok?'✓ 回答正确！':'✗ 回答错误')+'</div><div class="fbl"><strong>完整题目：</strong>'+h(q.question)+'</div>'+fbS+'<div class="fbl"><strong>你的答案：</strong>'+h(rCur.ua)+' <strong>正确答案：</strong>'+h(q.answer)+'</div>'+(r.mm?'<div class="fb-memo"><div class="memo-title">📝 备注</div>'+h(r.mm)+'</div>':'')+'<div class="fb-ref">来源：'+h(q.section)+' 第 '+q.number+' 题 · 🔗 按位置配对'+(rMode==='recent'?(ok?' · 🕒 答对不计分':' · 🕒 已记为错'):'')+'</div></div>';fb.scrollIntoView({behavior:'smooth',block:'center'})}
 function rNext(){if(rCur&&rCur.ua){var q=getQ(rCur.q.id);var ok;if(isMultiBlank(q)){var us2=rCur.ua.toUpperCase().split(''),cs2=q.answer.toUpperCase().split('');ok=us2.length===cs2.length&&us2.every(function(v,idx){return v===cs2[idx]})}else{var ca=q.answer.toUpperCase(),del=re('[,，、\\\\s]+'),cs2=new Set(ca.split(del).filter(Boolean)),us2=new Set(rCur.ua.toUpperCase().split('').filter(function(x){return/[A-D]/.test(x)}));ok=cs2.size>1?cs2.size===us2.size&&Array.from(cs2).every(function(x){return us2.has(x)}):(us2.size===1&&cs2.has(Array.from(us2)[0]))}rRes.push({id:q.id,ok:ok})}rI++;loadRnd()}
+function rNextR(){if(rCur&&rCur.ua&&rCur.rec){rRes.push({id:rCur.q.id,ok:rCur.rec.ok,pre:rCur.rec.pre})}rI++;loadRnd()}
 window.SRD=SRD;window.rNext=rNext;window.rSingle=rSingle;window.RSET=RSET;window.startRnd=startRnd;
-function startRnd(){rSelCh=[].slice.call(document.querySelectorAll('#rnd-sel .rch.on')).map(function(b){return b.dataset.ch});var p=rndPool();rTgt=null;rRes=[];if(!p.length){toast('所选章节没有错题');return}rOrd=rPond(p);rI=0;document.getElementById('rnd-setup').style.display='none';document.getElementById('rand-card').style.display='';loadRnd()}
+function startRnd(){rSelCh=[].slice.call(document.querySelectorAll('#rnd-sel .rch.on')).map(function(b){return b.dataset.ch});var p=rndPool();rTgt=null;rRes=[];if(!p.length){toast('所选章节没有错题');return}rOrd=rPond(p);rI=0;rMode='random';rTs=[];document.getElementById('rnd-setup').style.display='none';document.getElementById('rand-card').style.display='';loadRnd()}
+function startRecent(){
+  var rows=recentWrong(),p=rows.slice(0,50).map(function(x){return x.id});
+  var su=document.getElementById('rnd-setup'),card=document.getElementById('rand-card');
+  su.style.display='none';card.style.display='';
+  if(!p.length){card.innerHTML='<div class="empty"><div class="ico">🕒</div><p>还没有可以复盘的错题</p><p style="font-size:12px;margin-top:8px">先去「随机刷题」或「章节顺序刷题」刷些题，答错过的题会自动攒到这里</p></div><div style="margin-top:18px"><button class="btn btn-s" onclick="RSET()">← 返回选择章节</button></div>';return}
+  rTgt=null;rMode='recent';rTs=p.map(function(id){return dateStr(GR(id).d)});rRes=[];rEdit=false;
+  card.innerHTML='<div class="card"><h3 style="margin-bottom:10px">🕒 刷最近错题<span class="hint" style="margin-left:8px">按最近答错的日期倒序 · 最多 50 题 · 同一天随机</span></h3>'
+   +'<p style="color:var(--sub);font-size:13px;line-height:1.9">本次将刷 <strong style="color:var(--pri)">'+p.length+'</strong> 题'
+   +(p.length<50?'<span class="hint">（错题本里答错过的题都在这儿了）</span>':'')
+   +'<br>计分规则：<strong>答对不计分、答错才计入</strong> —— 答对不会抬高历史正确率，也不会把题移出错题本；答错照常记为错、并刷新它的「最近错题」日期。</p>'
+   +'<div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-p" id="rec-go">开始刷题</button><button class="btn btn-s" onclick="RSET()">返回</button></div></div>';
+  document.getElementById('rec-go').onclick=function(){rOrd=p;rI=0;loadRnd()};
+}
 function finishRnd(){
   if(rTgt){RSET();return}
+  if(rMode==='recent'){finishRecent();return}
   var card=document.getElementById('rand-card'),t=rRes.length,ok=0,wi=[],ri=[];
   rRes.forEach(function(x){if(x.ok){ok++;ri.push(x.id)}else wi.push(x.id)});
   var acc=t?Math.round(ok/t*100):0,sc=acc>=80?'good':acc<60?'bad':'';
-  var htm='<div class="card"><div class="result"><div class="score '+sc+'">'+acc+'%</div><div style="color:var(--sub)">答对 <strong style="color:var(--succ)">'+ok+'</strong> · 答错 <strong style="color:var(--dang)">'+(t-ok)+'</strong> · 共 '+t+' 题</div><div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn btn-p" onclick="startRnd()">再来一轮</button><button class="btn btn-s" onclick="RSET()">重新选章节</button><button class="btn btn-s" onclick="document.querySelector(\'[data-tab=book]\').click()">去错题本</button></div></div>';
+  var htm='<div class="card"><div class="result"><div class="score '+sc+'">'+acc+'%</div><div style="color:var(--sub)">答对 <strong style="color:var(--succ)">'+ok+'</strong> · 答错 <strong style="color:var(--dang)">'+(t-ok)+'</strong> · 共 '+t+' 题</div><div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn btn-p" onclick="startRnd()">再来一轮</button><button class="btn btn-s" onclick="startRecent()">🕒 再刷最近错题</button><button class="btn btn-s" onclick="RSET()">重新选章节</button><button class="btn btn-s" onclick="document.querySelector(\'[data-tab=book]\').click()">去错题本</button></div></div>';
   var cut=function(s){return s.length>58?s.slice(0,58)+'…':s};
   if(wi.length)htm+='<h3 style="margin:20px 0 12px;font-size:15px">❌ 答错 '+wi.length+' 题<span class="hint" style="margin-left:8px">仍留在错题本</span></h3><div style="font-size:12.5px;color:var(--sub);line-height:1.95">'+wi.map(function(id){var q=getQ(id);return'<div><strong style="color:var(--text)">'+h(id)+'</strong> '+h(cut(q.question))+'</div>'}).join('')+'</div>';
   if(ok)htm+='<h3 style="margin:20px 0 12px;font-size:15px">✅ 答对 '+ok+' 题<span class="hint" style="margin-left:8px">勾选表示已掌握，可移出错题本</span></h3><div class="bulk-row"><button class="btn btn-s btn-sm" id="rnd-sa">全选</button><button class="btn btn-d btn-sm" id="rnd-rm">移出错题本</button></div><div style="font-size:12.5px;line-height:2.1">'+ri.map(function(id){var q=getQ(id);return'<label style="display:flex;gap:6px;align-items:flex-start;cursor:pointer"><input type="checkbox" class="rndcb" value="'+h(id)+'" style="margin-top:7px"><span><strong>'+h(id)+'</strong> <span style="color:var(--sub)">'+h(cut(q.question))+'</span></span></label>'}).join('')+'</div>';
   htm+='<div style="margin-top:20px"><button class="btn btn-s" onclick="RSET()">← 返回选择章节</button></div></div>';
   card.innerHTML=htm;
   var sa=document.getElementById('rnd-sa');if(sa)sa.onclick=function(){var cbs=document.querySelectorAll('.rndcb'),all=true;cbs.forEach(function(c){if(!c.checked)all=false});cbs.forEach(function(c){c.checked=!all})};
-  var rm=document.getElementById('rnd-rm');if(rm)rm.onclick=function(){var c=[].slice.call(document.querySelectorAll('.rndcb')).filter(function(x){return x.checked});if(!c.length)return toast('先勾选要移出的题');if(!confirm('把选中的 '+c.length+' 题移出错题本？'))return;c.forEach(function(x){UPD(x.value,{b:false})});toast('已移出 '+c.length+' 题');RSET()};
+  var rm=document.getElementById('rnd-rm');if(rm)rm.onclick=function(){var c=[].slice.call(document.querySelectorAll('.rndcb')).filter(function(x){return x.checked});if(!c.length)return toast('先勾选要移出的题');if(!confirm('把选中的 '+c.length+' 题移出错题本？'))return;c.forEach(function(x){UPDd(x.value,{b:false})});toast('已移出 '+c.length+' 题');RSET()};
+}
+function finishRecent(){
+  var card=document.getElementById('rand-card'),t=rRes.length,ok=0,wi=[],ri=[],done=0;
+  rRes.forEach(function(x){if(x.ok){ok++;ri.push(x.id)}else wi.push(x.id)});
+  rRes.forEach(function(x){if(x.ok&&x.pre===false)return;done++});
+  var acc=done?Math.round((done-(t-ok))/done*100):0,sc=done?(acc>=80?'good':acc<60?'bad':''):'';
+  var cut=function(s){return s.length>58?s.slice(0,58)+'…':s};
+  var when=function(id,i){var ds=rTs[i]||dateStr(GR(id).d);return ds?('<span class="hint">错于 '+h(ds)+'</span>'):'<span class="hint">无日期·老错题</span>'};
+  var htm='<div class="card"><div class="result"><div class="score '+sc+'">'+(done?acc+'%':'—')+'</div><div style="color:var(--sub)">答对 <strong style="color:var(--succ)">'+ok+'</strong> · 答错 <strong style="color:var(--dang)">'+(t-ok)+'</strong> · 共 '+t+' 题</div><div class="rtag-tip" style="text-align:center">🕒 最近错题模式：答对 '+ok+' 题，其中 <strong>'+done+'</strong> 题计入（原来就答错），'+(ok-done)+' 题<strong>不计分</strong> —— 正确率只降不升；答错 '+(t-ok)+' 题照常计入</div><div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn btn-p" onclick="startRecent()">🕒 再刷最近错题</button><button class="btn btn-s" onclick="RSET()">重新选章节</button><button class="btn btn-s" onclick="document.querySelector(\'[data-tab=book]\').click()">去错题本</button></div></div>';
+  if(wi.length)htm+='<h3 style="margin:20px 0 12px;font-size:15px">❌ 答错 '+wi.length+' 题<span class="hint" style="margin-left:8px">仍留在错题本，日期已刷新</span></h3><div style="font-size:12.5px;color:var(--sub);line-height:1.95">'+wi.map(function(id,i){return'<div><strong style="color:var(--text)">'+h(id)+'</strong> '+h(cut(getQ(id).question))+' '+when(id,i)+'</div>'}).join('')+'</div>';
+  if(ok)htm+='<h3 style="margin:20px 0 12px;font-size:15px">✅ 答对 '+ok+' 题<span class="hint" style="margin-left:8px">可以移出错题本了（不计分，需手动勾选）</span></h3><div class="bulk-row"><button class="btn btn-s btn-sm" id="rec-sa">全选</button><button class="btn btn-d btn-sm" id="rec-rm">移出错题本</button></div><div style="font-size:12.5px;line-height:2.1">'+ri.map(function(id,i){return'<label style="display:flex;gap:6px;align-items:flex-start;cursor:pointer"><input type="checkbox" class="rndcb" value="'+h(id)+'" style="margin-top:7px"><span><strong>'+h(id)+'</strong> <span style="color:var(--sub)">'+h(cut(getQ(id).question))+'</span> '+when(id,i)+'</span></label>'}).join('')+'</div>';
+  htm+='<div style="margin-top:20px"><button class="btn btn-s" onclick="RSET()">← 返回选择章节</button></div></div>';
+  card.innerHTML=htm;
+  var sa=document.getElementById('rec-sa');if(sa)sa.onclick=function(){var cbs=document.querySelectorAll('.rndcb'),all=true;cbs.forEach(function(c){if(!c.checked)all=false});cbs.forEach(function(c){c.checked=!all})};
+  var rm=document.getElementById('rec-rm');if(rm)rm.onclick=function(){var c=[].slice.call(document.querySelectorAll('.rndcb')).filter(function(x){return x.checked});if(!c.length)return toast('先勾选要移出的题');if(!confirm('把选中的 '+c.length+' 题移出错题本？'))return;c.forEach(function(x){UPDd(x.value,{b:false})});toast('已移出 '+c.length+' 题');RSET()};
 }
 
 function OQ(id){SRD(id);document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on')});views.forEach(function(v){v.classList.remove('on')});document.querySelector('[data-tab="random"]').classList.add('on');document.getElementById('v-random').classList.add('on')}
