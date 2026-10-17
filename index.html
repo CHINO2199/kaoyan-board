@@ -2163,7 +2163,7 @@ function bootApp() {
   'use strict';
 
   const DAY_W = 36;          // 甘特图单日列宽（px，与 CSS 一致）
-  const WIN_DAYS = 70;       // 大日历窗口天数（10 周）
+  const WIN_DAYS = 70;       // 窗口天数**默认值**（实际用 this.winDays，按任务范围自动撑开）
   const HEAT_WEEKS = 18;     // 热力图周数
   /* ---- 408 刷题自建日志 ----
      刷题本自己的记录 {a,w,l,b} 没有时间戳，画不了「每天刷了几道」。
@@ -2407,6 +2407,7 @@ function bootApp() {
         activeSubj: 1,
         viewDate: '',
         winStart: '',
+        winDays: 70,          // 可视天数：按任务范围自动撑开（不再写死 70）
         noteTab: '全部',
         activeNote: null,
         tip: { show: false, x: 0, y: 0, title: '', html: '' },
@@ -2498,7 +2499,7 @@ function bootApp() {
       days() {
         if (!this.winStart) return [];
         const base = parseISO(this.winStart), arr = [];
-        for (let i = 0; i < WIN_DAYS; i++) {
+        for (let i = 0; i < this.winDays; i++) {
           const d = addDays(base, i), iso = isoOf(d);
           arr.push({ iso, d: d.getDate(), wd: WD[(d.getDay() + 6) % 7].slice(1), we: d.getDay() === 0 || d.getDay() === 6, isToday: iso === this.todayISO });
         }
@@ -2803,6 +2804,7 @@ function bootApp() {
         this.isDemo = false;
         this.err = '';
         this.ready = true;
+        this.resetWindow();                        // 数据到位后按任务范围重算窗口
         if (key) this._key = key;                 // 后续解密 PDF 需要
         const self = this;
         this.whenReady(function () { return self.$refs.stage; }, function () { self.startThree(); });
@@ -2813,6 +2815,7 @@ function bootApp() {
         this.payload = JSON.parse(JSON.stringify(DEMO));
         this.isDemo = true;
         this._key = '';
+        this.resetWindow();
         this.gateEmpty = false;
         this.ready = true;
         const self = this;
@@ -2878,7 +2881,18 @@ function bootApp() {
 
       /* ---------------- 甘特 ---------------- */
       resetWindow() {
-        this.winStart = isoOf(addDays(parseISO(this.todayISO), -12));
+        /* 窗口自动覆盖「全部任务」：
+           起点 = min(今天-12, 最早计划开始日-2)，天数 = max(70, 到最晚结束日+3)
+           —— 早期任务（如 9/30 的单日任务）不再被挤出可视区。 */
+        const base = isoOf(addDays(parseISO(this.todayISO), -12));
+        const ps = (this.milestones || []).map(m => m.planned_start).filter(Boolean).sort();
+        const pe = (this.milestones || []).map(m => m.planned_end).filter(Boolean).sort();
+        let start = base;
+        if (ps.length && ps[0] < start) start = isoOf(addDays(parseISO(ps[0]), -2));
+        let span = 70;
+        if (pe.length) span = Math.max(span, diffDays(pe[pe.length - 1], start) + 3);
+        this.winStart = start;
+        this.winDays = Math.min(Math.max(span, 70), 200);
       },
       shiftWindow(dir) {
         this.winStart = isoOf(addDays(parseISO(this.winStart), dir * 30));
@@ -2891,8 +2905,8 @@ function bootApp() {
         const e = isPlan ? (ms.planned_end || s) : (ms.actual_end || this.todayISO);
         let a = this.dayIndex(s), b = this.dayIndex(e);
         if (b < a) b = a;
-        const A = Math.max(a, 0), B = Math.min(b, WIN_DAYS - 1);
-        if (B < 0 || A > WIN_DAYS - 1) return { style: { display: 'none' } };
+        const A = Math.max(a, 0), B = Math.min(b, this.winDays - 1);
+        if (B < 0 || A > this.winDays - 1) return { style: { display: 'none' } };
         return {
           style: {
             left: (A * DAY_W + 2) + 'px',
@@ -2940,11 +2954,11 @@ function bootApp() {
           else merged.push({ kind: d.kind, a, b: a, start: d.iso, end: d.iso });
         });
         return merged.map(s => {
-          const A = Math.max(s.a, 0), B = Math.min(s.b, WIN_DAYS - 1);
+          const A = Math.max(s.a, 0), B = Math.min(s.b, this.winDays - 1);
           return {
             kind: s.kind, start: s.start, end: s.end, days: s.b - s.a + 1,
             isEnd: !!ms.actual_end && s.end === ms.actual_end,
-            inWin: B >= A && A <= WIN_DAYS - 1 && B >= 0,
+            inWin: B >= A && A <= this.winDays - 1 && B >= 0,
             style: { left: (A * DAY_W + 2) + 'px', width: Math.max((B - A + 1) * DAY_W - 5, 9) + 'px' }
           };
         }).filter(s => s.inWin);
